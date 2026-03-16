@@ -61,3 +61,5 @@ end
 gem "ed25519", "~> 1.4"
 gem "base58", "~> 0.2.3"
 gem "solana_rpc_ruby", "~> 2.0"
+
+gem "hotwire-livereload", "~> 2.1", group: :development

@@ -7,6 +7,9 @@ import { application } from "./application"
 import BalanceController from "./balance_controller"
 application.register("balance", BalanceController)
 
+import ClipboardController from "./clipboard_controller"
+application.register("clipboard", ClipboardController)
+
 import DropdownController from "./dropdown_controller"
 application.register("dropdown", DropdownController)
 
