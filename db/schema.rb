@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_16_071800) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_16_085055) do
   create_table "tokens", force: :cascade do |t|
     t.string "mint", null: false
     t.string "name"
@@ -24,6 +24,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_16_071800) do
     t.index ["mint"], name: "index_tokens_on_mint", unique: true
   end
 
+  create_table "transfers", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "signature"
+    t.string "recipient", null: false
+    t.integer "amount_lamports", null: false
+    t.decimal "amount_sol", null: false
+    t.string "network", default: "mainnet", null: false
+    t.string "status", default: "pending", null: false
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["signature"], name: "index_transfers_on_signature", unique: true
+    t.index ["user_id"], name: "index_transfers_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "wallet_address", null: false
     t.string "nonce"
@@ -31,4 +46,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_16_071800) do
     t.datetime "updated_at", null: false
     t.index ["wallet_address"], name: "index_users_on_wallet_address", unique: true
   end
+
+  add_foreign_key "transfers", "users"
 end

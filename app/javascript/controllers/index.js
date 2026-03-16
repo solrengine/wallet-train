@@ -16,5 +16,8 @@ application.register("clipboard", ClipboardController)
 import DropdownController from "./dropdown_controller"
 application.register("dropdown", DropdownController)
 
+import TransferController from "./transfer_controller"
+application.register("transfer", TransferController)
+
 import WalletController from "./wallet_controller"
 application.register("wallet", WalletController)

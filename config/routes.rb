@@ -11,6 +11,13 @@ Rails.application.routes.draw do
   # Dashboard
   get "dashboard", to: "dashboard#show", as: :dashboard
 
+  # Transfers
+  resources :transfers, only: [ :new, :create, :show, :update ] do
+    member do
+      get :status
+    end
+  end
+
   # Network switching
   patch "network", to: "networks#update", as: :network
 

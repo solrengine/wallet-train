@@ -2,7 +2,8 @@
 
 <% network_colors = { "mainnet" => "bg-green-400", "devnet" => "bg-yellow-400", "testnet" => "bg-blue-400" } %>
 <% network_label = @network.capitalize %>
-<% solscan_cluster = @network == "mainnet" ? "" : "?cluster=#{@network}" %>
+<% explorer_base = @network == "mainnet" ? "https://solscan.io" : "https://explorer.solana.com" %>
+<% explorer_cluster = @network == "mainnet" ? "" : "?cluster=#{@network}" %>
 
 <div class="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950">
   <%# Navigation %>
@@ -51,6 +52,6 @@
   <div class="max-w-2xl mx-auto px-4 py-8 space-y-6" data-controller="auto-refresh" data-auto-refresh-interval-value="60">
     <%= render "dashboard/portfolio_value", total_usd: @total_usd %>
     <%= render "dashboard/token_list", tokens: @tokens %>
-    <%= render "dashboard/recent_activity", transactions: @transactions, wallet_address: @wallet_address, solscan_cluster: solscan_cluster %>
+    <%= render "dashboard/recent_activity", transactions: @transactions, wallet_address: @wallet_address, explorer_base: explorer_base, explorer_cluster: explorer_cluster %>
   </div>
 </div>

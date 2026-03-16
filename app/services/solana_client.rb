@@ -65,6 +65,16 @@ class SolanaClient
     end
   end
 
+  def get_latest_blockhash
+    result = rpc_request("getLatestBlockhash", [ { "commitment" => "finalized" } ])
+    result.dig("result", "value", "blockhash")
+  end
+
+  def get_signature_status(signature)
+    result = rpc_request("getSignatureStatuses", [ [ signature ] ])
+    result.dig("result", "value", 0)
+  end
+
   def get_transaction(signature)
     result = rpc_request("getTransaction", [
       signature,
