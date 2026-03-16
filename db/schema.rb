@@ -10,7 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_16_050328) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_16_071800) do
+  create_table "tokens", force: :cascade do |t|
+    t.string "mint", null: false
+    t.string "name"
+    t.string "symbol"
+    t.string "icon"
+    t.integer "decimals"
+    t.string "token_program"
+    t.boolean "verified", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["mint"], name: "index_tokens_on_mint", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "wallet_address", null: false
     t.string "nonce"
