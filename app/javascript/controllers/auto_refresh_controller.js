@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
-import { visit } from "@hotwired/turbo"
+import { session } from "@hotwired/turbo"
 
-// Periodically refreshes the page via Turbo visit (preserves scroll, morphs DOM).
-// Only runs when the tab is visible.
+// Periodically refreshes the page using Turbo's morph-based page refresh.
+// Only morphs DOM elements that changed — no flash, no scroll reset.
 export default class extends Controller {
   static values = {
     interval: { type: Number, default: 30 }
@@ -11,7 +11,7 @@ export default class extends Controller {
   connect() {
     this.timer = setInterval(() => {
       if (document.visibilityState === "visible") {
-        visit(window.location.href, { action: "replace" })
+        session.refresh(document.baseURI)
       }
     }, this.intervalValue * 1000)
   }
