@@ -8,7 +8,7 @@ class WalletPortfolioService
 
   # Returns all tokens including SOL with metadata and USD values
   def tokens
-    Rails.cache.fetch(cache_key("tokens_v2"), expires_in: 1.minute) do
+    Rails.cache.fetch(cache_key("tokens_v2"), expires_in: 45.seconds) do
       @token_service.token_balances_for(@wallet_address)
     end
   end

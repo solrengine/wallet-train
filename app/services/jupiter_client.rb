@@ -49,8 +49,7 @@ class JupiterClient
   private
 
   def fetch_price(mint)
-    # Cache price for 2 minutes
-    Rails.cache.fetch("token_price/#{mint}", expires_in: 2.minutes) do
+    Rails.cache.fetch("token_price/#{mint}", expires_in: 1.minute) do
       data = search(mint)
       data&.dig("usdPrice")&.to_f
     end
