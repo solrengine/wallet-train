@@ -54,7 +54,7 @@ export default class extends Controller {
       <button
         data-action="click->wallet#selectWallet"
         data-wallet-index="${index}"
-        class="flex items-center gap-3 w-full p-3 rounded-xl border transition-all duration-200
+        class="flex items-center gap-3 w-full p-3 rounded-xl border cursor-pointer transition-all duration-200
           ${this.selectedWallet === wallet
             ? 'border-purple-500 bg-purple-900/20'
             : 'border-gray-700 hover:border-gray-500 bg-gray-800/30'}"

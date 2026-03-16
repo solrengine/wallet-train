@@ -1,136 +1,139 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950">
   <%# Navigation %>
-  <nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur">
-    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-xl font-bold text-white">Solana on Rails</h1>
-      <div class="flex items-center gap-4">
-        <span class="text-gray-400 text-sm font-mono bg-gray-800 px-3 py-1 rounded-lg">
+  <nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-lg font-bold text-white">Solana on Rails</h1>
+      <div class="flex items-center gap-3">
+        <%# Network selector %>
+        <div class="relative" data-controller="dropdown">
+          <button data-action="click->dropdown#toggle" class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-800 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors">
+            <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+            Mainnet
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div data-dropdown-target="menu" class="hidden absolute right-0 mt-1 w-32 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+            <div class="px-3 py-2 text-xs text-white bg-purple-900/30 cursor-default">Mainnet</div>
+            <div class="px-3 py-2 text-xs text-gray-400 hover:bg-gray-700 cursor-pointer">Devnet</div>
+            <div class="px-3 py-2 text-xs text-gray-400 hover:bg-gray-700 cursor-pointer">Testnet</div>
+          </div>
+        </div>
+
+        <%# Wallet address %>
+        <span class="text-gray-400 text-xs font-mono bg-gray-800 px-2.5 py-1.5 rounded-lg">
           <%= @short_address %>
         </span>
-        <%= button_to "Disconnect", logout_path, method: :delete, class: "text-gray-400 hover:text-white text-sm transition-colors" %>
+
+        <%# Disconnect %>
+        <%= button_to "Disconnect", logout_path, method: :delete, class: "text-gray-500 hover:text-white text-xs cursor-pointer transition-colors" %>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-4xl mx-auto px-4 py-12 space-y-8">
-    <%# Header %>
+  <div class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+    <%# Portfolio header %>
     <div>
-      <h2 class="text-2xl font-bold text-white mb-1">Dashboard</h2>
-      <p class="text-gray-400 text-sm font-mono"><%= @wallet_address %></p>
+      <p class="text-gray-500 text-xs mb-1">Portfolio Value</p>
+      <p class="text-3xl font-bold text-white">
+        <% if @total_usd > 0 %>
+          $<%= number_with_precision(@total_usd, precision: 2, delimiter: ",") %>
+        <% else %>
+          --
+        <% end %>
+      </p>
     </div>
 
-    <%# Balance cards %>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl p-6">
-        <p class="text-gray-400 text-sm mb-1">SOL Balance</p>
-        <p class="text-3xl font-bold text-white">
-          <% if @balance %>
-            <%= number_with_precision(@balance, precision: 4) %>
-          <% else %>
-            <span class="text-gray-500">--</span>
-          <% end %>
-        </p>
-        <p class="text-gray-500 text-xs mt-1">SOL</p>
-      </div>
-
-      <div class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl p-6">
-        <p class="text-gray-400 text-sm mb-1">Tokens</p>
-        <p class="text-3xl font-bold text-white"><%= @tokens.size %></p>
-        <p class="text-gray-500 text-xs mt-1">SPL tokens held</p>
-      </div>
-
-      <div class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl p-6">
-        <p class="text-gray-400 text-sm mb-1">Network</p>
-        <p class="text-3xl font-bold text-white flex items-center gap-2">
-          <span class="w-2 h-2 bg-green-400 rounded-full"></span>
-          Mainnet
-        </p>
-        <p class="text-gray-500 text-xs mt-1">Solana</p>
-      </div>
-    </div>
-
-    <%# Token balances %>
+    <%# Token list %>
     <div class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-700">
-        <h3 class="text-lg font-semibold text-white">Token Balances</h3>
+      <div class="px-5 py-3 border-b border-gray-700">
+        <h3 class="text-sm font-semibold text-white">Tokens <span class="text-gray-500">(<%= @tokens.size %>)</span></h3>
       </div>
 
       <% if @tokens.any? %>
         <div class="divide-y divide-gray-700/50">
           <% @tokens.each do |token| %>
-            <div class="px-6 py-4 flex items-center justify-between">
+            <div class="px-5 py-3 flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <% if token[:icon] %>
-                  <img src="<%= token[:icon] %>" alt="<%= token[:symbol] %>" class="w-8 h-8 rounded-full" loading="lazy" />
+                  <img src="<%= token[:icon] %>" alt="<%= token[:symbol] %>" class="w-9 h-9 rounded-full" loading="lazy" />
                 <% else %>
-                  <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xs font-bold">
+                  <div class="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xs font-bold">
                     <%= token[:symbol][0..1] %>
                   </div>
                 <% end %>
                 <div>
-                  <p class="text-white font-medium"><%= token[:symbol] %></p>
-                  <p class="text-gray-500 text-xs"><%= token[:name] %></p>
+                  <p class="text-white text-sm font-medium"><%= token[:name] %></p>
+                  <p class="text-gray-500 text-xs"><%= token[:ui_amount_string] %> <%= token[:symbol] %></p>
                 </div>
               </div>
-              <p class="text-white font-mono text-sm"><%= token[:ui_amount_string] %></p>
+              <div class="text-right">
+                <% if token[:usd_value] && token[:usd_value] > 0 %>
+                  <p class="text-white text-sm font-medium">$<%= number_with_precision(token[:usd_value], precision: 2, delimiter: ",") %></p>
+                <% else %>
+                  <p class="text-gray-600 text-sm">--</p>
+                <% end %>
+              </div>
             </div>
           <% end %>
         </div>
       <% else %>
-        <div class="px-6 py-8 text-center text-gray-500">
-          No SPL tokens found
+        <div class="px-5 py-8 text-center text-gray-500 text-sm">
+          No tokens found
         </div>
       <% end %>
     </div>
 
     <%# Recent transactions %>
     <div class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-700">
-        <h3 class="text-lg font-semibold text-white">Recent Activity</h3>
+      <div class="px-5 py-3 border-b border-gray-700">
+        <h3 class="text-sm font-semibold text-white">Recent Activity</h3>
       </div>
 
       <% if @transactions.any? %>
         <div class="divide-y divide-gray-700/50">
-          <% @transactions.each do |tx| %>
-            <div class="px-6 py-4 flex items-center justify-between">
+          <% @transactions.first(5).each do |tx| %>
+            <div class="px-5 py-3 flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <% if tx[:error] %>
-                  <div class="w-8 h-8 rounded-full bg-red-900/30 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-7 h-7 rounded-full bg-red-900/30 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </div>
                 <% else %>
-                  <div class="w-8 h-8 rounded-full bg-green-900/30 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-7 h-7 rounded-full bg-green-900/30 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                 <% end %>
-                <div>
-                  <a href="https://solscan.io/tx/<%= tx[:signature] %>"
-                     target="_blank"
-                     class="text-purple-400 hover:text-purple-300 font-mono text-sm transition-colors">
-                    <%= tx[:signature][0..7] %>...<%= tx[:signature][-4..] %>
-                  </a>
-                  <% if tx[:memo] %>
-                    <p class="text-gray-500 text-xs mt-0.5"><%= tx[:memo] %></p>
-                  <% end %>
-                </div>
+                <a href="https://solscan.io/tx/<%= tx[:signature] %>"
+                   target="_blank"
+                   class="text-purple-400 hover:text-purple-300 font-mono text-xs transition-colors">
+                  <%= tx[:signature][0..7] %>...<%= tx[:signature][-4..] %>
+                </a>
               </div>
               <div class="text-right">
                 <% if tx[:block_time] %>
-                  <p class="text-gray-400 text-xs"><%= time_ago_in_words(tx[:block_time]) %> ago</p>
+                  <p class="text-gray-500 text-xs"><%= time_ago_in_words(tx[:block_time]) %> ago</p>
                 <% end %>
-                <p class="text-xs <%= tx[:error] ? 'text-red-400' : 'text-green-400' %>">
-                  <%= tx[:error] ? "Failed" : tx[:confirmation_status]&.capitalize %>
-                </p>
               </div>
             </div>
           <% end %>
         </div>
+        <div class="px-5 py-3 border-t border-gray-700">
+          <a href="https://solscan.io/account/<%= @wallet_address %>"
+             target="_blank"
+             class="text-purple-400 hover:text-purple-300 text-xs transition-colors flex items-center justify-center gap-1">
+            View all on Solscan
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
       <% else %>
-        <div class="px-6 py-8 text-center text-gray-500">
+        <div class="px-5 py-8 text-center text-gray-500 text-sm">
           No recent transactions
         </div>
       <% end %>

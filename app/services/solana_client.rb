@@ -1,7 +1,8 @@
-require "net/http"
 require "json"
 
 class SolanaClient
+  include SslHttpClient
+
   DEFAULT_RPC_URL = "https://api.mainnet-beta.solana.com"
   SPL_TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 
@@ -17,8 +18,6 @@ class SolanaClient
     lamports.to_f / 1_000_000_000
   end
 
-  # Fetches all SPL token accounts for a wallet.
-  # Returns an array of hashes: { mint:, balance:, decimals:, ui_amount: }
   def get_token_accounts(wallet_address)
     result = rpc_request("getTokenAccountsByOwner", [
       wallet_address,
@@ -34,7 +33,7 @@ class SolanaClient
 
       token_amount = info["tokenAmount"]
       amount = token_amount["uiAmount"].to_f
-      next if amount.zero? # Skip zero-balance tokens
+      next if amount.zero?
 
       {
         mint: info["mint"],
@@ -46,8 +45,6 @@ class SolanaClient
     end
   end
 
-  # Fetches recent transaction signatures for a wallet.
-  # Returns an array of hashes: { signature:, slot:, block_time:, err:, memo: }
   def get_recent_signatures(wallet_address, limit: 10)
     result = rpc_request("getSignaturesForAddress", [
       wallet_address,
@@ -68,7 +65,6 @@ class SolanaClient
     end
   end
 
-  # Fetches full transaction details.
   def get_transaction(signature)
     result = rpc_request("getTransaction", [
       signature,
@@ -82,16 +78,7 @@ class SolanaClient
 
   def rpc_request(method, params = [])
     uri = URI.parse(@rpc_url)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = (uri.scheme == "https")
-    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-    http.verify_callback = ->(_preverify_ok, store_ctx) {
-      return true if store_ctx.error == 0
-      return true if store_ctx.error == OpenSSL::X509::V_ERR_UNABLE_TO_GET_CRL
-      false
-    }
-    http.open_timeout = 10
-    http.read_timeout = 10
+    http = ssl_http(uri)
 
     request = Net::HTTP::Post.new(uri.path.empty? ? "/" : uri.path)
     request["Content-Type"] = "application/json"

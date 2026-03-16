@@ -7,5 +7,8 @@ import { application } from "./application"
 import BalanceController from "./balance_controller"
 application.register("balance", BalanceController)
 
+import DropdownController from "./dropdown_controller"
+application.register("dropdown", DropdownController)
+
 import WalletController from "./wallet_controller"
 application.register("wallet", WalletController)

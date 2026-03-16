@@ -6,21 +6,21 @@ class WalletPortfolioService
     @token_service = TokenMetadataService.new
   end
 
-  def sol_balance
-    Rails.cache.fetch(cache_key("sol_balance"), expires_in: 30.seconds) do
-      @solana_client.get_balance(@wallet_address)
-    end
-  end
-
-  def token_balances
-    Rails.cache.fetch(cache_key("token_balances"), expires_in: 1.minute) do
+  # Returns all tokens including SOL with metadata and USD values
+  def tokens
+    Rails.cache.fetch(cache_key("tokens_v2"), expires_in: 1.minute) do
       @token_service.token_balances_for(@wallet_address)
     end
   end
 
+  # Total portfolio value in USD
+  def total_usd_value
+    tokens.sum { |t| t[:usd_value] || 0 }
+  end
+
   def recent_transactions
     Rails.cache.fetch(cache_key("recent_txs"), expires_in: 30.seconds) do
-      @solana_client.get_recent_signatures(@wallet_address, limit: 10)
+      @solana_client.get_recent_signatures(@wallet_address, limit: 5)
     end
   end
 
