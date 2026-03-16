@@ -1,0 +1,43 @@
+<div id="token_list" class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl overflow-hidden">
+  <div class="px-5 py-3 border-b border-gray-700">
+    <h3 class="text-sm font-semibold text-white">Tokens <span class="text-gray-500">(<%= tokens.size %>)</span></h3>
+  </div>
+
+  <% if tokens.any? %>
+    <div class="divide-y divide-gray-700/50">
+      <% tokens.each do |token| %>
+        <div class="px-5 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="relative w-9 h-9 shrink-0">
+              <div class="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xs font-bold">
+                <%= token[:symbol][0..1] %>
+              </div>
+              <% if token[:icon] %>
+                <img src="<%= token[:icon] %>"
+                     alt="<%= token[:symbol] %>"
+                     class="w-9 h-9 rounded-full absolute inset-0"
+                     loading="lazy"
+                     onerror="this.remove()" />
+              <% end %>
+            </div>
+            <div>
+              <p class="text-white text-sm font-medium"><%= token[:name] %></p>
+              <p class="text-gray-500 text-xs"><%= token[:ui_amount_string] %> <%= token[:symbol] %></p>
+            </div>
+          </div>
+          <div class="text-right">
+            <% if token[:usd_value] && token[:usd_value] > 0 %>
+              <p class="text-white text-sm font-medium">$<%= number_with_precision(token[:usd_value], precision: 2, delimiter: ",") %></p>
+            <% else %>
+              <p class="text-gray-600 text-sm">--</p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="px-5 py-8 text-center text-gray-500 text-sm">
+      No tokens found
+    </div>
+  <% end %>
+</div>

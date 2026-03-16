@@ -1,0 +1,10 @@
+<div id="portfolio_value">
+  <p class="text-gray-500 text-xs mb-1">Portfolio Value</p>
+  <p class="text-3xl font-bold text-white">
+    <% if total_usd > 0 %>
+      $<%= number_with_precision(total_usd, precision: 2, delimiter: ",") %>
+    <% else %>
+      --
+    <% end %>
+  </p>
+</div>

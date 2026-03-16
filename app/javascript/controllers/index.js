@@ -4,6 +4,9 @@
 
 import { application } from "./application"
 
+import AutoRefreshController from "./auto_refresh_controller"
+application.register("auto-refresh", AutoRefreshController)
+
 import BalanceController from "./balance_controller"
 application.register("balance", BalanceController)
 
