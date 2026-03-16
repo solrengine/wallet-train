@@ -1,0 +1,14 @@
+default: &default
+  domain: localhost
+
+development:
+  <<: *default
+  domain: localhost
+
+test:
+  <<: *default
+  domain: localhost
+
+production:
+  <<: *default
+  domain: <%= ENV.fetch("APP_DOMAIN", "localhost") %>
