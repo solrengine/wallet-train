@@ -11,5 +11,8 @@ Rails.application.routes.draw do
   # Dashboard
   get "dashboard", to: "dashboard#show", as: :dashboard
 
+  # Network switching
+  patch "network", to: "networks#update", as: :network
+
   root "sessions#new"
 end

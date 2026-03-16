@@ -21,7 +21,7 @@
                 </svg>
               </div>
             <% end %>
-            <a href="https://solscan.io/tx/<%= tx[:signature] %>"
+            <a href="https://solscan.io/tx/<%= tx[:signature] %><%= local_assigns[:solscan_cluster] %>"
                target="_blank"
                class="text-purple-400 hover:text-purple-300 font-mono text-xs transition-colors">
               <%= tx[:signature][0..7] %>...<%= tx[:signature][-4..] %>
@@ -36,7 +36,7 @@
       <% end %>
     </div>
     <div class="px-5 py-3 border-t border-gray-700">
-      <a href="https://solscan.io/account/<%= wallet_address %>"
+      <a href="https://solscan.io/account/<%= wallet_address %><%= local_assigns[:solscan_cluster] %>"
          target="_blank"
          class="text-purple-400 hover:text-purple-300 text-xs transition-colors flex items-center justify-center gap-1">
         View all on Solscan

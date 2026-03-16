@@ -2,8 +2,10 @@
 class TokenMetadataService
   SOL_MINT = "So11111111111111111111111111111111111111112"
 
-  def initialize
-    @client = SolanaClient.new
+  def initialize(network: "mainnet", rpc_url: nil)
+    @network = network
+    @client = SolanaClient.new(rpc_url: rpc_url)
+    @mainnet = (network == "mainnet")
   end
 
   # Returns all tokens for a wallet with metadata and USD values.
@@ -11,18 +13,17 @@ class TokenMetadataService
     sol_balance = @client.get_balance(wallet_address)
     accounts = @client.get_token_accounts(wallet_address)
 
-    # All mints including SOL
     all_mints = [ SOL_MINT ] + accounts.map { |a| a[:mint] }
 
     # Metadata from DB (fetches from Jupiter only for new mints)
     token_records = Token.find_or_fetch_many(all_mints)
 
-    # Prices from cache/Jupiter
-    prices = JupiterClient.fetch_prices(all_mints)
+    # Prices only available on mainnet
+    prices = @mainnet ? JupiterClient.fetch_prices(all_mints) : {}
 
     tokens = []
 
-    # SOL entry (override name since Jupiter returns "Wrapped SOL")
+    # SOL entry
     if sol_balance
       sol_token = token_records[SOL_MINT]
       sol_price = prices[SOL_MINT]
@@ -49,7 +50,6 @@ class TokenMetadataService
       )
     end
 
-    # Sort by USD value descending; no-price tokens at the bottom
     tokens.sort_by { |t| -(t[:usd_value] || -1) }
   end
 

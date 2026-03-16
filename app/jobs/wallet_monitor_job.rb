@@ -6,13 +6,14 @@ class WalletMonitorJob < ApplicationJob
   POLL_INTERVAL = 15.seconds
   MONITOR_DURATION = 10.minutes
 
-  def perform(wallet_address, started_at: nil)
+  def perform(wallet_address, started_at: nil, network: "mainnet")
     started_at ||= Time.current.iso8601
 
     # Mark as active
     Rails.cache.write("wallet_monitor/#{wallet_address}/active", true, expires_in: MONITOR_DURATION)
 
-    client = SolanaClient.new
+    rpc_url = WalletPortfolioService::NETWORK_RPC_URLS[network] || WalletPortfolioService::NETWORK_RPC_URLS["mainnet"]
+    client = SolanaClient.new(rpc_url: rpc_url)
 
     # Fetch latest signature
     signatures = client.get_recent_signatures(wallet_address, limit: 1)
@@ -33,7 +34,7 @@ class WalletMonitorJob < ApplicationJob
     # Re-enqueue if within monitoring window
     elapsed = Time.current - Time.parse(started_at)
     if elapsed < MONITOR_DURATION
-      self.class.set(wait: POLL_INTERVAL).perform_later(wallet_address, started_at: started_at)
+      self.class.set(wait: POLL_INTERVAL).perform_later(wallet_address, started_at: started_at, network: network)
     else
       Rails.cache.delete("wallet_monitor/#{wallet_address}/active")
     end
@@ -42,9 +43,11 @@ class WalletMonitorJob < ApplicationJob
   private
 
   def broadcast_update(wallet_address)
-    # Clear cached portfolio data
-    Rails.cache.delete("wallet/#{wallet_address}/tokens_v2")
-    Rails.cache.delete("wallet/#{wallet_address}/recent_txs")
+    # Clear cached portfolio data for all networks
+    %w[mainnet devnet testnet].each do |net|
+      Rails.cache.delete("wallet/#{net}/#{wallet_address}/tokens_v2")
+      Rails.cache.delete("wallet/#{net}/#{wallet_address}/recent_txs")
+    end
 
     portfolio = WalletPortfolioService.new(wallet_address)
     tokens = portfolio.tokens

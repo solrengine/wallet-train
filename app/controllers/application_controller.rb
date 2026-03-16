@@ -3,7 +3,7 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate!
 
-  helper_method :current_user, :logged_in?
+  helper_method :current_user, :logged_in?, :current_network, :current_rpc_url
 
   private
 
@@ -17,5 +17,13 @@ class ApplicationController < ActionController::Base
 
   def authenticate!
     redirect_to login_path unless logged_in?
+  end
+
+  def current_network
+    session[:network] || "mainnet"
+  end
+
+  def current_rpc_url
+    NetworksController::NETWORKS[current_network]
   end
 end
