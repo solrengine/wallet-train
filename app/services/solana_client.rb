@@ -90,7 +90,7 @@ class SolanaClient
     uri = URI.parse(@rpc_url)
     http = ssl_http(uri)
 
-    request = Net::HTTP::Post.new(uri.path.empty? ? "/" : uri.path)
+    request = Net::HTTP::Post.new(uri.request_uri.empty? ? "/" : uri.request_uri)
     request["Content-Type"] = "application/json"
     request.body = {
       jsonrpc: "2.0",

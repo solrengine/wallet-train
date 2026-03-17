@@ -1,80 +1,95 @@
-# Polls Solana for new transactions and broadcasts updates via Turbo Streams.
-# Re-enqueues itself for a limited time after the user loads the dashboard.
+# Starts a WebSocket subscription to Solana for real-time account changes.
+# Falls back to polling if WebSocket is unavailable.
 class WalletMonitorJob < ApplicationJob
   queue_as :default
 
-  POLL_INTERVAL = 15.seconds
   MONITOR_DURATION = 10.minutes
 
-  def perform(wallet_address, started_at: nil, network: "mainnet")
-    started_at ||= Time.current.iso8601
+  def perform(wallet_address, network: "mainnet")
+    cache_key = "wallet_monitor/#{wallet_address}/active"
+    return if Rails.cache.read(cache_key) # Already monitoring
 
-    # Mark as active
-    Rails.cache.write("wallet_monitor/#{wallet_address}/active", true, expires_in: MONITOR_DURATION)
+    Rails.cache.write(cache_key, true, expires_in: MONITOR_DURATION)
 
-    rpc_url = WalletPortfolioService::NETWORK_RPC_URLS[network] || WalletPortfolioService::NETWORK_RPC_URLS["mainnet"]
-    client = SolanaClient.new(rpc_url: rpc_url)
+    ws_url = ws_url_for(network)
 
-    # Fetch latest signature
-    signatures = client.get_recent_signatures(wallet_address, limit: 1)
-    latest_sig = signatures.first&.dig(:signature)
-
-    # Compare with last known signature
-    cache_key = "wallet_monitor/#{wallet_address}/last_sig"
-    previous_sig = Rails.cache.read(cache_key)
-
-    if latest_sig && latest_sig != previous_sig
-      Rails.cache.write(cache_key, latest_sig, expires_in: 1.hour)
-
-      if previous_sig # Don't broadcast on first poll (just establishing baseline)
-        broadcast_update(wallet_address)
-      end
-    end
-
-    # Re-enqueue if within monitoring window
-    elapsed = Time.current - Time.parse(started_at)
-    if elapsed < MONITOR_DURATION
-      self.class.set(wait: POLL_INTERVAL).perform_later(wallet_address, started_at: started_at, network: network)
+    if ws_url.present?
+      monitor_via_websocket(wallet_address, network, ws_url)
     else
-      Rails.cache.delete("wallet_monitor/#{wallet_address}/active")
+      monitor_via_polling(wallet_address, network)
     end
+  ensure
+    Rails.cache.delete("wallet_monitor/#{wallet_address}/active")
   end
 
   private
 
-  def broadcast_update(wallet_address)
-    # Clear cached portfolio data for all networks
+  def monitor_via_websocket(wallet_address, network, ws_url)
+    monitor = SolanaWebsocketMonitor.new(wallet_address, network: network)
+    monitor.start
+
+    # Run for MONITOR_DURATION then stop
+    sleep MONITOR_DURATION
+    monitor.stop
+  end
+
+  def monitor_via_polling(wallet_address, network, started_at: Time.current)
+    rpc_url = WalletPortfolioService::NETWORK_RPC_URLS[network]
+    client = SolanaClient.new(rpc_url: rpc_url)
+
+    cache_key = "wallet_monitor/#{wallet_address}/last_sig"
+    signatures = client.get_recent_signatures(wallet_address, limit: 1)
+    latest_sig = signatures.first&.dig(:signature)
+
+    previous_sig = Rails.cache.read(cache_key)
+
+    if latest_sig && latest_sig != previous_sig
+      Rails.cache.write(cache_key, latest_sig, expires_in: 1.hour)
+      broadcast_update(wallet_address, network) if previous_sig
+    end
+
+    if Time.current - started_at < MONITOR_DURATION
+      sleep 15
+      monitor_via_polling(wallet_address, network, started_at: started_at)
+    end
+  end
+
+  def broadcast_update(wallet_address, network)
     %w[mainnet devnet testnet].each do |net|
       Rails.cache.delete("wallet/#{net}/#{wallet_address}/tokens_v2")
       Rails.cache.delete("wallet/#{net}/#{wallet_address}/recent_txs")
     end
 
-    portfolio = WalletPortfolioService.new(wallet_address)
-    tokens = portfolio.tokens
-    total_usd = portfolio.total_usd_value
-    transactions = portfolio.recent_transactions
-
+    portfolio = WalletPortfolioService.new(wallet_address, network: network)
     stream = "wallet_#{wallet_address}"
 
     Turbo::StreamsChannel.broadcast_replace_to(
-      stream,
-      target: "portfolio_value",
+      stream, target: "portfolio_value",
       partial: "dashboard/portfolio_value",
-      locals: { total_usd: total_usd }
+      locals: { total_usd: portfolio.total_usd_value }
     )
 
     Turbo::StreamsChannel.broadcast_replace_to(
-      stream,
-      target: "token_list",
+      stream, target: "token_list",
       partial: "dashboard/token_list",
-      locals: { tokens: tokens }
+      locals: { tokens: portfolio.tokens }
     )
 
+    explorer_base = network == "mainnet" ? "https://solscan.io" : "https://explorer.solana.com"
+    explorer_cluster = network == "mainnet" ? "" : "?cluster=#{network}"
+
     Turbo::StreamsChannel.broadcast_replace_to(
-      stream,
-      target: "recent_activity",
+      stream, target: "recent_activity",
       partial: "dashboard/recent_activity",
-      locals: { transactions: transactions, wallet_address: wallet_address }
+      locals: { transactions: portfolio.recent_transactions, wallet_address: wallet_address, explorer_base: explorer_base, explorer_cluster: explorer_cluster }
     )
+  end
+
+  def ws_url_for(network)
+    case network
+    when "mainnet" then ENV["SOLANA_WS_URL"]
+    when "devnet" then ENV.fetch("SOLANA_WS_DEVNET_URL", "wss://api.devnet.solana.com")
+    when "testnet" then ENV.fetch("SOLANA_WS_TESTNET_URL", "wss://api.testnet.solana.com")
+    end
   end
 end

@@ -62,3 +62,7 @@ gem "ed25519", "~> 1.4"
 gem "base58", "~> 0.2.3"
 
 gem "hotwire-livereload", "~> 2.1", group: :development
+
+gem "dotenv-rails", "~> 3.2", groups: [:development, :test]
+
+gem "websocket-client-simple", "~> 0.9.0"
