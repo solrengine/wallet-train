@@ -126,43 +126,112 @@
     </div>
   </div>
 
-  <%# Stack %>
+  <%# Code snippets %>
   <div class="max-w-5xl mx-auto px-6 py-20">
-    <div class="bg-gray-800/30 border border-gray-700/50 rounded-2xl p-8 sm:p-12">
-      <h2 class="text-2xl font-bold text-white mb-8 text-center">The Stack</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 text-center">
-        <div>
-          <p class="text-white font-semibold text-sm">Rails 8</p>
-          <p class="text-gray-500 text-xs mt-1">Framework</p>
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-white mb-4">Looks like Rails, talks to Solana</h2>
+      <p class="text-gray-400 max-w-lg mx-auto">Standard Rails patterns you already know. No new framework to learn.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <%# Code: SIWS Verification %>
+      <div class="bg-gray-900/80 border border-gray-700/50 rounded-2xl overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-gray-700/50 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
+          <span class="text-gray-500 text-xs ml-2">siws_verifier.rb</span>
         </div>
-        <div>
-          <p class="text-white font-semibold text-sm">Hotwire</p>
-          <p class="text-gray-500 text-xs mt-1">Turbo + Stimulus</p>
-        </div>
-        <div>
-          <p class="text-white font-semibold text-sm">@solana/kit</p>
-          <p class="text-gray-500 text-xs mt-1">Transactions</p>
-        </div>
-        <div>
-          <p class="text-white font-semibold text-sm">Tailwind 4</p>
-          <p class="text-gray-500 text-xs mt-1">Styling</p>
-        </div>
-        <div>
-          <p class="text-white font-semibold text-sm">SQLite</p>
-          <p class="text-gray-500 text-xs mt-1">Database</p>
-        </div>
-        <div>
-          <p class="text-white font-semibold text-sm">Kamal</p>
-          <p class="text-gray-500 text-xs mt-1">Deploy</p>
-        </div>
+        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-purple-400">class</span> <span class="text-blue-300">SiwsVerifier</span>
+  <span class="text-purple-400">def</span> <span class="text-yellow-300">verify!</span>
+    verify_message_format!
+    verify_domain!
+    verify_signature!  <span class="text-gray-600"># Ed25519</span>
+  <span class="text-purple-400">end</span>
+
+  <span class="text-purple-400">def</span> <span class="text-yellow-300">verify_signature!</span>
+    pubkey = <span class="text-blue-300">Base58</span>.base58_to_binary(wallet_address)
+    verify_key = <span class="text-blue-300">Ed25519::VerifyKey</span>.new(pubkey)
+    verify_key.verify(signature, message)
+  <span class="text-purple-400">end</span>
+<span class="text-purple-400">end</span></code></pre>
       </div>
+
+      <%# Code: Sessions Controller %>
+      <div class="bg-gray-900/80 border border-gray-700/50 rounded-2xl overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-gray-700/50 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
+          <span class="text-gray-500 text-xs ml-2">sessions_controller.rb</span>
+        </div>
+        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-purple-400">class</span> <span class="text-blue-300">SessionsController</span> < <span class="text-blue-300">ApplicationController</span>
+  <span class="text-purple-400">def</span> <span class="text-yellow-300">create</span>
+    verifier = <span class="text-blue-300">SiwsVerifier</span>.new(
+      wallet_address: params[<span class="text-green-400">:wallet_address</span>],
+      message: params[<span class="text-green-400">:message</span>],
+      signature: params[<span class="text-green-400">:signature</span>]
+    )
+
+    <span class="text-purple-400">if</span> verifier.verify
+      session[<span class="text-green-400">:user_id</span>] = user.id
+    <span class="text-purple-400">end</span>
+  <span class="text-purple-400">end</span>
+<span class="text-purple-400">end</span></code></pre>
+      </div>
+
+      <%# Code: Real-time %>
+      <div class="bg-gray-900/80 border border-gray-700/50 rounded-2xl overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-gray-700/50 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
+          <span class="text-gray-500 text-xs ml-2">dashboard/show.html.erb</span>
+        </div>
+        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-gray-600">&lt;%=</span> <span class="text-yellow-300">turbo_stream_from</span> <span class="text-green-400">"wallet_#{@wallet_address}"</span> <span class="text-gray-600">%&gt;</span>
+
+<span class="text-gray-600">&lt;%=</span> render <span class="text-green-400">"dashboard/portfolio_value"</span> <span class="text-gray-600">%&gt;</span>
+<span class="text-gray-600">&lt;%=</span> render <span class="text-green-400">"dashboard/token_list"</span> <span class="text-gray-600">%&gt;</span>
+<span class="text-gray-600">&lt;%=</span> render <span class="text-green-400">"dashboard/recent_activity"</span> <span class="text-gray-600">%&gt;</span>
+
+<span class="text-gray-500">&lt;!-- Solana WebSocket → Turbo Streams → DOM updates --&gt;</span></code></pre>
+      </div>
+
+      <%# Code: Stimulus + @solana/kit %>
+      <div class="bg-gray-900/80 border border-gray-700/50 rounded-2xl overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-gray-700/50 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
+          <span class="text-gray-500 text-xs ml-2">transfer_controller.js</span>
+        </div>
+        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-purple-400">import</span> { <span class="text-blue-300">Controller</span> } <span class="text-purple-400">from</span> <span class="text-green-400">"@hotwired/stimulus"</span>
+<span class="text-purple-400">import</span> { <span class="text-blue-300">pipe</span>, <span class="text-blue-300">createTransactionMessage</span>,
+  <span class="text-blue-300">compileTransaction</span> } <span class="text-purple-400">from</span> <span class="text-green-400">"@solana/kit"</span>
+
+<span class="text-gray-600">// Rails validates → kit builds tx → wallet signs</span>
+<span class="text-purple-400">const</span> txMessage = <span class="text-yellow-300">pipe</span>(
+  createTransactionMessage({ <span class="text-blue-300">version</span>: <span class="text-green-400">0</span> }),
+  tx => setTransactionMessageFeePayer(sender, tx),
+  tx => appendTransactionMessageInstruction(ix, tx),
+)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <%# Stack pills %>
+  <div class="max-w-5xl mx-auto px-6 py-12">
+    <div class="flex flex-wrap justify-center gap-3">
+      <% %w[Rails\ 8 Hotwire Stimulus @solana/kit Tailwind\ 4 SQLite Solid\ Queue Solid\ Cache Solid\ Cable Kamal Ed25519 Jupiter\ API].each do |tech| %>
+        <span class="text-xs text-gray-400 bg-gray-800/50 border border-gray-700/30 px-3 py-1.5 rounded-full"><%= tech %></span>
+      <% end %>
     </div>
   </div>
 
   <%# CTA %>
   <div class="max-w-5xl mx-auto px-6 py-20 text-center">
-    <h2 class="text-3xl font-bold text-white mb-4">Who says you need Next.js for Solana?</h2>
-    <p class="text-gray-400 mb-8 max-w-lg mx-auto">WalletTrain proves that Rails 8 is a first-class stack for building Solana dapps. Open source, MIT licensed.</p>
+    <h2 class="text-3xl font-bold text-white mb-4">Rails meets Solana</h2>
+    <p class="text-gray-400 mb-8 max-w-lg mx-auto">WalletTrain is open source and MIT licensed. Connect your wallet and try it, or dive into the source.</p>
     <div class="flex flex-wrap justify-center gap-4">
       <%= link_to login_path, class: "inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200" do %>
         Try the Demo
