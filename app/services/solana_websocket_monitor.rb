@@ -110,8 +110,8 @@ class SolanaWebsocketMonitor
   def broadcast_update
     Rails.logger.info("[SolanaWS] Broadcasting update for #{@wallet_address}")
 
-    # Wait briefly for the RPC node to reflect the new state
-    sleep 2
+    # Wait for the RPC node to reflect the confirmed state
+    sleep 3
 
     Rails.cache.delete("wallet/#{@wallet_address}/tokens")
     Rails.cache.delete("wallet/#{@wallet_address}/recent_txs")

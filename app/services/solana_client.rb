@@ -8,7 +8,7 @@ class SolanaClient
   end
 
   def get_balance(wallet_address)
-    result = rpc_request("getBalance", [ wallet_address ])
+    result = rpc_request("getBalance", [ wallet_address, { "commitment" => "confirmed" } ])
     lamports = result.dig("result", "value")
     return nil unless lamports
 
