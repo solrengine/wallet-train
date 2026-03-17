@@ -60,6 +60,11 @@ class TransfersController < ApplicationController
     transfer.update!(signature: signature, status: status)
 
     if status == "submitted" && signature.present?
+      # Clear cached portfolio so dashboard shows fresh data
+      wallet = current_user.wallet_address
+      Rails.cache.delete("wallet/#{wallet}/tokens")
+      Rails.cache.delete("wallet/#{wallet}/recent_txs")
+
       TransactionConfirmationJob.perform_later(transfer.id)
     end
 
