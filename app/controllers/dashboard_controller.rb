@@ -6,6 +6,13 @@ class DashboardController < ApplicationController
     # Touch updated_at so the WebSocket monitor knows this user is active
     current_user.touch
 
+    # Clear cache if user has a recent transfer (last 2 minutes)
+    # to ensure fresh on-chain data after sending
+    if current_user.transfers.where("created_at > ?", 2.minutes.ago).exists?
+      Rails.cache.delete("wallet/#{@wallet_address}/tokens")
+      Rails.cache.delete("wallet/#{@wallet_address}/recent_txs")
+    end
+
     portfolio = WalletPortfolioService.new(@wallet_address)
     @tokens = portfolio.tokens
     @total_usd = portfolio.total_usd_value
