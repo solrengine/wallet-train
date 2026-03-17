@@ -38,16 +38,19 @@ class SolanaWebsocketMonitor
   def connect_and_listen
     @ws = WebSocket::Client::Simple.connect(@ws_url)
     ws = @ws
+
+    # Capture in local vars for use inside callbacks
+    wallet_address = @wallet_address
     monitor = self
 
     ws.on :open do
-      Rails.logger.info("[SolanaWS] Connected for #{monitor.send(:@wallet_address)} on #{SolanaConfig.network}")
+      Rails.logger.info("[SolanaWS] Connected for #{wallet_address} on #{SolanaConfig.network}")
       ws.send({
         jsonrpc: "2.0",
         id: 1,
         method: "accountSubscribe",
         params: [
-          monitor.send(:@wallet_address),
+          wallet_address,
           { encoding: "jsonParsed", commitment: "confirmed" }
         ]
       }.to_json)
