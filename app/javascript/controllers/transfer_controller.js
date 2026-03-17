@@ -258,6 +258,11 @@ export default class extends Controller {
         if (data.status === "finalized" || data.status === "confirmed") {
           this.confirmationBadgeTarget.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1)
           this.confirmationBadgeTarget.className = "inline-block px-2 py-1 rounded-full text-xs bg-green-900/30 text-green-400"
+
+          // Redirect to dashboard after confirmation
+          setTimeout(() => {
+            window.location.href = this.dashboardUrlValue
+          }, 1500)
           return
         }
         if (data.status === "failed") {
