@@ -19,5 +19,5 @@ Rails.application.routes.draw do
   end
 
 
-  root "sessions#new"
+  root "pages#landing"
 end
