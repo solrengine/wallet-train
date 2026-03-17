@@ -10,22 +10,19 @@ class SolanaWebsocketMonitor
     @wallet_address = wallet_address
     @ws_url = SolanaConfig.ws_url
     @running = false
+    @account_changed = false
+    @mutex = Mutex.new
   end
 
   def start
     return if @running
     @running = true
 
-    Thread.new do
-      while @running
-        begin
-          connect_and_listen
-        rescue => e
-          Rails.logger.error("[SolanaWS] Connection error: #{e.message}")
-          sleep RECONNECT_DELAY if @running
-        end
-      end
-    end
+    # WebSocket runs in a thread, sets a flag when account changes
+    Thread.new { websocket_loop }
+
+    # Main polling loop checks the flag and broadcasts
+    broadcast_loop
   end
 
   def stop
@@ -35,11 +32,20 @@ class SolanaWebsocketMonitor
 
   private
 
+  def websocket_loop
+    while @running
+      begin
+        connect_and_listen
+      rescue => e
+        Rails.logger.error("[SolanaWS] Connection error: #{e.message}")
+        sleep RECONNECT_DELAY if @running
+      end
+    end
+  end
+
   def connect_and_listen
     @ws = WebSocket::Client::Simple.connect(@ws_url)
     ws = @ws
-
-    # Capture in local vars for use inside callbacks
     wallet_address = @wallet_address
     monitor = self
 
@@ -57,7 +63,17 @@ class SolanaWebsocketMonitor
     end
 
     ws.on :message do |msg|
-      monitor.send(:handle_message, msg.data)
+      begin
+        parsed = JSON.parse(msg.data)
+        if parsed["id"] == 1 && parsed["result"]
+          Rails.logger.info("[SolanaWS] Subscribed with ID #{parsed['result']}")
+        elsif parsed["method"] == "accountNotification"
+          Rails.logger.info("[SolanaWS] Account changed for #{wallet_address}")
+          monitor.flag_changed!
+        end
+      rescue => e
+        Rails.logger.error("[SolanaWS] Message parse error: #{e.message}")
+      end
     end
 
     ws.on :error do |e|
@@ -71,23 +87,29 @@ class SolanaWebsocketMonitor
     sleep 1 while @running && !ws.closed?
   end
 
-  def handle_message(data)
-    parsed = JSON.parse(data)
+  # Called from the WebSocket thread
+  def flag_changed!
+    @mutex.synchronize { @account_changed = true }
+  end
 
-    if parsed["id"] == 1 && parsed["result"]
-      Rails.logger.info("[SolanaWS] Subscribed with ID #{parsed['result']}")
-      return
-    end
+  # Runs on the main thread — checks the flag every second
+  def broadcast_loop
+    while @running
+      changed = @mutex.synchronize do
+        val = @account_changed
+        @account_changed = false
+        val
+      end
 
-    if parsed["method"] == "accountNotification"
-      Rails.logger.info("[SolanaWS] Account changed for #{@wallet_address}")
-      broadcast_update
+      broadcast_update if changed
+
+      sleep 1
     end
-  rescue => e
-    Rails.logger.error("[SolanaWS] Message parse error: #{e.message}")
   end
 
   def broadcast_update
+    Rails.logger.info("[SolanaWS] Broadcasting update for #{@wallet_address}")
+
     Rails.cache.delete("wallet/#{@wallet_address}/tokens")
     Rails.cache.delete("wallet/#{@wallet_address}/recent_txs")
 
@@ -111,5 +133,7 @@ class SolanaWebsocketMonitor
       partial: "dashboard/recent_activity",
       locals: { transactions: portfolio.recent_transactions, wallet_address: @wallet_address }
     )
+
+    Rails.logger.info("[SolanaWS] Broadcast complete for #{@wallet_address}")
   end
 end

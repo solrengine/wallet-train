@@ -2,16 +2,21 @@
 
 # Runs the Solana WebSocket monitor as a standalone process.
 # Monitors all active users' wallets for account changes
-# and broadcasts updates via Turbo Streams.
+# and broadcasts updates via Turbo Streams + Solid Cable.
 
 require_relative "../config/environment"
 
-puts "[SolanaMonitor] Starting on #{SolanaConfig.network} (#{SolanaConfig.ws_url.sub(/api-key=.*/, 'api-key=***')})"
+puts "[SolanaMonitor] Starting on #{SolanaConfig.network}"
+puts "[SolanaMonitor] RPC: #{SolanaConfig.rpc_url.sub(/api-key=.*/, 'api-key=***')}"
+puts "[SolanaMonitor] WS:  #{SolanaConfig.ws_url.sub(/api-key=.*/, 'api-key=***')}"
+
+# Verify Solid Cable is working
+Turbo::StreamsChannel.broadcast_replace_to("_ping", target: "_ping", html: "")
+puts "[SolanaMonitor] Solid Cable broadcast OK"
 
 monitors = {}
 
 loop do
-  # Find all users with active sessions (logged in recently)
   active_wallets = User.where("updated_at > ?", 1.hour.ago).pluck(:wallet_address)
 
   # Start monitors for new wallets
@@ -20,11 +25,13 @@ loop do
 
     puts "[SolanaMonitor] Subscribing to #{wallet}"
     monitor = SolanaWebsocketMonitor.new(wallet)
-    monitor.start
+
+    # Start in a thread since `start` now blocks
+    Thread.new { monitor.start }
     monitors[wallet] = monitor
   end
 
-  # Stop monitors for wallets no longer active
+  # Stop monitors for inactive wallets
   monitors.each do |wallet, monitor|
     unless active_wallets.include?(wallet)
       puts "[SolanaMonitor] Unsubscribing from #{wallet}"
