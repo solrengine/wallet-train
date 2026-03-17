@@ -3,11 +3,8 @@ require "json"
 class SolanaClient
   include SslHttpClient
 
-  DEFAULT_RPC_URL = "https://api.mainnet-beta.solana.com"
-  SPL_TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-
   def initialize(rpc_url: nil)
-    @rpc_url = rpc_url || ENV.fetch("SOLANA_RPC_URL", DEFAULT_RPC_URL)
+    @rpc_url = rpc_url || SolanaConfig.rpc_url
   end
 
   def get_balance(wallet_address)
@@ -21,7 +18,7 @@ class SolanaClient
   def get_token_accounts(wallet_address)
     result = rpc_request("getTokenAccountsByOwner", [
       wallet_address,
-      { "programId" => SPL_TOKEN_PROGRAM },
+      { "programId" => "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" },
       { "encoding" => "jsonParsed" }
     ])
 

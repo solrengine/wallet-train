@@ -11,8 +11,7 @@ class TransactionConfirmationJob < ApplicationJob
     return unless transfer&.signature
     return if transfer.confirmed? || transfer.failed?
 
-    rpc_url = WalletPortfolioService::NETWORK_RPC_URLS[transfer.network]
-    client = SolanaClient.new(rpc_url: rpc_url)
+    client = SolanaClient.new(rpc_url: SolanaConfig.rpc_url(transfer.network))
 
     status_info = client.get_signature_status(transfer.signature)
 

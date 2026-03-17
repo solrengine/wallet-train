@@ -24,6 +24,6 @@ class ApplicationController < ActionController::Base
   end
 
   def current_rpc_url
-    NetworksController::NETWORKS[current_network]
+    SolanaConfig.rpc_url(current_network)
   end
 end

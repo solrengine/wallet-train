@@ -1,17 +1,15 @@
-require "net/http"
 require "json"
 require "websocket-client-simple"
 
 # Subscribes to Solana WebSocket RPC for real-time account changes.
 # Runs as a background thread and broadcasts updates via Turbo Streams.
 class SolanaWebsocketMonitor
-  RECONNECT_DELAY = 5 # seconds
+  RECONNECT_DELAY = 5
 
   def initialize(wallet_address, network: "mainnet")
     @wallet_address = wallet_address
     @network = network
-    @ws_url = ws_url_for(network)
-    @subscription_id = nil
+    @ws_url = SolanaConfig.ws_url(network)
     @running = false
   end
 
@@ -41,13 +39,10 @@ class SolanaWebsocketMonitor
   def connect_and_listen
     @ws = WebSocket::Client::Simple.connect(@ws_url)
     ws = @ws
-
     monitor = self
 
     ws.on :open do
-      Rails.logger.info("[SolanaWS] Connected to #{monitor.send(:@network)} for #{monitor.send(:@wallet_address)}")
-
-      # Subscribe to account changes
+      Rails.logger.info("[SolanaWS] Connected for #{monitor.send(:@wallet_address)}")
       ws.send({
         jsonrpc: "2.0",
         id: 1,
@@ -67,25 +62,21 @@ class SolanaWebsocketMonitor
       Rails.logger.error("[SolanaWS] Error: #{e.message}")
     end
 
-    ws.on :close do |e|
+    ws.on :close do
       Rails.logger.info("[SolanaWS] Disconnected")
     end
 
-    # Keep the thread alive while connected
     sleep 1 while @running && !ws.closed?
   end
 
   def handle_message(data)
     parsed = JSON.parse(data)
 
-    # Subscription confirmation
     if parsed["id"] == 1 && parsed["result"]
-      @subscription_id = parsed["result"]
-      Rails.logger.info("[SolanaWS] Subscribed with ID #{@subscription_id}")
+      Rails.logger.info("[SolanaWS] Subscribed with ID #{parsed['result']}")
       return
     end
 
-    # Account change notification
     if parsed["method"] == "accountNotification"
       Rails.logger.info("[SolanaWS] Account changed for #{@wallet_address}")
       broadcast_update
@@ -95,29 +86,24 @@ class SolanaWebsocketMonitor
   end
 
   def broadcast_update
-    # Clear caches
-    %w[mainnet devnet testnet].each do |net|
+    SolanaConfig::NETWORKS.each do |net|
       Rails.cache.delete("wallet/#{net}/#{@wallet_address}/tokens_v2")
       Rails.cache.delete("wallet/#{net}/#{@wallet_address}/recent_txs")
     end
 
     portfolio = WalletPortfolioService.new(@wallet_address, network: @network)
-    tokens = portfolio.tokens
-    total_usd = portfolio.total_usd_value
-    transactions = portfolio.recent_transactions
-
     stream = "wallet_#{@wallet_address}"
 
     Turbo::StreamsChannel.broadcast_replace_to(
       stream, target: "portfolio_value",
       partial: "dashboard/portfolio_value",
-      locals: { total_usd: total_usd }
+      locals: { total_usd: portfolio.total_usd_value }
     )
 
     Turbo::StreamsChannel.broadcast_replace_to(
       stream, target: "token_list",
       partial: "dashboard/token_list",
-      locals: { tokens: tokens }
+      locals: { tokens: portfolio.tokens }
     )
 
     explorer_base = @network == "mainnet" ? "https://solscan.io" : "https://explorer.solana.com"
@@ -126,18 +112,7 @@ class SolanaWebsocketMonitor
     Turbo::StreamsChannel.broadcast_replace_to(
       stream, target: "recent_activity",
       partial: "dashboard/recent_activity",
-      locals: { transactions: transactions, wallet_address: @wallet_address, explorer_base: explorer_base, explorer_cluster: explorer_cluster }
+      locals: { transactions: portfolio.recent_transactions, wallet_address: @wallet_address, explorer_base: explorer_base, explorer_cluster: explorer_cluster }
     )
-  end
-
-  def ws_url_for(network)
-    case network
-    when "mainnet"
-      ENV.fetch("SOLANA_WS_URL", "wss://api.mainnet-beta.solana.com")
-    when "devnet"
-      ENV.fetch("SOLANA_WS_DEVNET_URL", "wss://api.devnet.solana.com")
-    when "testnet"
-      ENV.fetch("SOLANA_WS_TESTNET_URL", "wss://api.testnet.solana.com")
-    end
   end
 end

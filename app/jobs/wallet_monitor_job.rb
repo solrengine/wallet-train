@@ -34,8 +34,7 @@ class WalletMonitorJob < ApplicationJob
   end
 
   def monitor_via_polling(wallet_address, network, started_at: Time.current)
-    rpc_url = WalletPortfolioService::NETWORK_RPC_URLS[network]
-    client = SolanaClient.new(rpc_url: rpc_url)
+    client = SolanaClient.new(rpc_url: SolanaConfig.rpc_url(network))
 
     cache_key = "wallet_monitor/#{wallet_address}/last_sig"
     signatures = client.get_recent_signatures(wallet_address, limit: 1)
@@ -55,7 +54,7 @@ class WalletMonitorJob < ApplicationJob
   end
 
   def broadcast_update(wallet_address, network)
-    %w[mainnet devnet testnet].each do |net|
+    SolanaConfig::NETWORKS.each do |net|
       Rails.cache.delete("wallet/#{net}/#{wallet_address}/tokens_v2")
       Rails.cache.delete("wallet/#{net}/#{wallet_address}/recent_txs")
     end
@@ -86,10 +85,6 @@ class WalletMonitorJob < ApplicationJob
   end
 
   def ws_url_for(network)
-    case network
-    when "mainnet" then ENV["SOLANA_WS_URL"]
-    when "devnet" then ENV.fetch("SOLANA_WS_DEVNET_URL", "wss://api.devnet.solana.com")
-    when "testnet" then ENV.fetch("SOLANA_WS_TESTNET_URL", "wss://api.testnet.solana.com")
-    end
+    SolanaConfig.ws_url(network)
   end
 end

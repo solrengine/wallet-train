@@ -1,0 +1,20 @@
+default: &default
+  networks:
+    mainnet:
+      rpc_url: <%= ENV.fetch("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com") %>
+      ws_url: <%= ENV.fetch("SOLANA_WS_URL", "wss://api.mainnet-beta.solana.com") %>
+    devnet:
+      rpc_url: <%= ENV.fetch("SOLANA_RPC_DEVNET_URL", "https://api.devnet.solana.com") %>
+      ws_url: <%= ENV.fetch("SOLANA_WS_DEVNET_URL", "wss://api.devnet.solana.com") %>
+    testnet:
+      rpc_url: <%= ENV.fetch("SOLANA_RPC_TESTNET_URL", "https://api.testnet.solana.com") %>
+      ws_url: <%= ENV.fetch("SOLANA_WS_TESTNET_URL", "wss://api.testnet.solana.com") %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
