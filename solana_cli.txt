@@ -1,0 +1,8 @@
+# Send SOL from your devnet wallet to your browser wallet
+solana transfer FqgrMQgCvEMYaUhsa3WBQsqwQbLfVKbGEWB2etpHC12 0.2 --from ~/.config/solana/devnet.json --url devnet --allow-unfunded-recipient
+
+# Check balance
+solana balance -k ~/.config/solana/devnet.json --url devnet
+
+# Airdrop more devnet SOL if needed
+solana airdrop 2 -k ~/.config/solana/devnet.json --url devnet

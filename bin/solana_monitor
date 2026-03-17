@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+# Runs the Solana WebSocket monitor as a standalone process.
+# Monitors all active users' wallets for account changes
+# and broadcasts updates via Turbo Streams.
+
+require_relative "../config/environment"
+
+puts "[SolanaMonitor] Starting on #{SolanaConfig.network} (#{SolanaConfig.ws_url.sub(/api-key=.*/, 'api-key=***')})"
+
+monitors = {}
+
+loop do
+  # Find all users with active sessions (logged in recently)
+  active_wallets = User.where("updated_at > ?", 1.hour.ago).pluck(:wallet_address)
+
+  # Start monitors for new wallets
+  active_wallets.each do |wallet|
+    next if monitors[wallet]
+
+    puts "[SolanaMonitor] Subscribing to #{wallet}"
+    monitor = SolanaWebsocketMonitor.new(wallet)
+    monitor.start
+    monitors[wallet] = monitor
+  end
+
+  # Stop monitors for wallets no longer active
+  monitors.each do |wallet, monitor|
+    unless active_wallets.include?(wallet)
+      puts "[SolanaMonitor] Unsubscribing from #{wallet}"
+      monitor.stop
+      monitors.delete(wallet)
+    end
+  end
+
+  sleep 30
+rescue => e
+  puts "[SolanaMonitor] Error: #{e.message}"
+  sleep 5
+end

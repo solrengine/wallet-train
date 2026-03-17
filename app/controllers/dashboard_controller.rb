@@ -3,17 +3,12 @@ class DashboardController < ApplicationController
     @wallet_address = current_user.wallet_address
     @short_address = "#{@wallet_address[0..3]}...#{@wallet_address[-4..]}"
 
+    # Touch updated_at so the WebSocket monitor knows this user is active
+    current_user.touch
+
     portfolio = WalletPortfolioService.new(@wallet_address)
     @tokens = portfolio.tokens
     @total_usd = portfolio.total_usd_value
     @transactions = portfolio.recent_transactions
-
-    WalletMonitorJob.perform_later(@wallet_address) unless monitoring?(@wallet_address)
-  end
-
-  private
-
-  def monitoring?(wallet_address)
-    Rails.cache.read("wallet_monitor/#{wallet_address}/active")
   end
 end
