@@ -15,32 +15,87 @@ import {
 } from "@solana/kit"
 
 // Handles one-click SOL donations from the landing page.
-// No login required — connects wallet, builds tx, signs, sends.
+// Shows a wallet picker if multiple wallets are available.
 export default class extends Controller {
-  static targets = ["status"]
+  static targets = ["status", "walletPicker", "walletList", "amounts"]
   static values = {
     recipient: String,
     rpcUrl: String
+  }
+
+  connect() {
+    this.selectedWallet = null
+    this.pendingAmount = null
+    this.discoverWallets()
+  }
+
+  discoverWallets() {
+    const { get, on } = getWallets()
+    this.availableWallets = get().filter(w => w.features[SolanaSignAndSendTransaction])
+    on("register", () => {
+      this.availableWallets = get().filter(w => w.features[SolanaSignAndSendTransaction])
+    })
   }
 
   async donate(event) {
     const amount = parseFloat(event.currentTarget.dataset.amount)
     if (!amount || amount <= 0) return
 
-    const button = event.currentTarget
+    if (this.availableWallets.length === 0) {
+      return this.showStatus("No Solana wallet found. Please install one.", "error")
+    }
+
+    // If only one wallet, use it directly
+    if (this.availableWallets.length === 1) {
+      this.selectedWallet = this.availableWallets[0]
+      return this.executeDonation(amount, event.currentTarget)
+    }
+
+    // Multiple wallets — show picker
+    this.pendingAmount = amount
+    this.pendingButton = event.currentTarget
+    this.showWalletPicker()
+  }
+
+  showWalletPicker() {
+    const html = this.availableWallets.map((wallet, index) => `
+      <button data-action="click->donate#pickWallet"
+              data-wallet-index="${index}"
+              class="flex items-center gap-3 w-full p-3 rounded-xl border border-gray-700 hover:border-purple-500 bg-gray-800/50 hover:bg-purple-900/20 cursor-pointer transition-all duration-200">
+        ${wallet.icon ? `<img src="${wallet.icon}" alt="${wallet.name}" class="w-7 h-7 rounded-lg" />` : ''}
+        <span class="text-white text-sm font-medium">${wallet.name}</span>
+      </button>
+    `).join("")
+
+    this.walletListTarget.innerHTML = html
+    this.walletPickerTarget.classList.remove("hidden")
+    this.amountsTarget.classList.add("hidden")
+  }
+
+  pickWallet(event) {
+    const index = parseInt(event.currentTarget.dataset.walletIndex)
+    this.selectedWallet = this.availableWallets[index]
+    this.walletPickerTarget.classList.add("hidden")
+    this.amountsTarget.classList.remove("hidden")
+    this.executeDonation(this.pendingAmount, this.pendingButton)
+  }
+
+  cancelPicker() {
+    this.walletPickerTarget.classList.add("hidden")
+    this.amountsTarget.classList.remove("hidden")
+  }
+
+  async executeDonation(amount, button) {
     const originalText = button.textContent
     button.disabled = true
     button.textContent = "Connecting..."
 
     try {
-      // Find a wallet with signAndSendTransaction
-      const { wallet, account } = await this.connectWallet()
+      const { wallet, account } = await this.connectWallet(this.selectedWallet)
 
-      // Build the transaction
       button.textContent = "Sign in wallet..."
       const txBytes = await this.buildTransaction(account.address, amount)
 
-      // Sign and send
       const chain = this.rpcUrlValue.includes("devnet") ? "solana:devnet"
         : this.rpcUrlValue.includes("testnet") ? "solana:testnet"
         : "solana:mainnet"
@@ -55,7 +110,6 @@ export default class extends Controller {
       const decoder = getBase58Decoder()
       const signature = decoder.decode(sigBytes)
 
-      // Show success
       this.showStatus(`Sent ${amount} SOL! ${signature.slice(0, 8)}...`, "success")
       button.textContent = "Sent!"
       setTimeout(() => {
@@ -75,28 +129,14 @@ export default class extends Controller {
     }
   }
 
-  async connectWallet() {
-    const { get } = getWallets()
-    const wallets = get().filter(w => w.features[SolanaSignAndSendTransaction])
+  async connectWallet(wallet) {
+    const connectFeature = wallet.features["standard:connect"]
+    if (!connectFeature) throw new Error("Wallet does not support connect")
 
-    if (wallets.length === 0) {
-      throw new Error("No Solana wallet found. Please install one.")
-    }
+    const { accounts } = await connectFeature.connect()
+    if (!accounts?.length) throw new Error("No accounts found")
 
-    // Try to connect the first available wallet
-    for (const wallet of wallets) {
-      const connectFeature = wallet.features["standard:connect"]
-      if (!connectFeature) continue
-
-      try {
-        const { accounts } = await connectFeature.connect()
-        if (accounts?.length > 0) {
-          return { wallet, account: accounts[0] }
-        }
-      } catch { /* try next */ }
-    }
-
-    throw new Error("Could not connect wallet. Please try again.")
+    return { wallet, account: accounts[0] }
   }
 
   async buildTransaction(senderAddress, amountSol) {
