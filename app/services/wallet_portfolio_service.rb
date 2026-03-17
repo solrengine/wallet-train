@@ -1,15 +1,13 @@
 # Aggregates all on-chain data for a wallet with caching.
 class WalletPortfolioService
-  def initialize(wallet_address, network: "mainnet")
+  def initialize(wallet_address)
     @wallet_address = wallet_address
-    @network = network
-    rpc_url = SolanaConfig.rpc_url(network)
-    @solana_client = SolanaClient.new(rpc_url: rpc_url)
-    @token_service = TokenMetadataService.new(network: network, rpc_url: rpc_url)
+    @solana_client = SolanaClient.new
+    @token_service = TokenMetadataService.new
   end
 
   def tokens
-    Rails.cache.fetch(cache_key("tokens_v2"), expires_in: 45.seconds) do
+    Rails.cache.fetch(cache_key("tokens"), expires_in: 45.seconds) do
       @token_service.token_balances_for(@wallet_address)
     end
   end
@@ -27,6 +25,6 @@ class WalletPortfolioService
   private
 
   def cache_key(suffix)
-    "wallet/#{@network}/#{@wallet_address}/#{suffix}"
+    "wallet/#{@wallet_address}/#{suffix}"
   end
 end

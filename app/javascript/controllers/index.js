@@ -10,9 +10,6 @@ application.register("auto-refresh", AutoRefreshController)
 import ClipboardController from "./clipboard_controller"
 application.register("clipboard", ClipboardController)
 
-import DropdownController from "./dropdown_controller"
-application.register("dropdown", DropdownController)
-
 import TransferController from "./transfer_controller"
 application.register("transfer", TransferController)
 

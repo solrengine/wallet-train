@@ -1,22 +1,22 @@
 # Starts a WebSocket subscription to Solana for real-time account changes.
 # Falls back to polling if WebSocket is unavailable.
+# Runs as long as the dashboard is open (re-triggered on page load).
 class WalletMonitorJob < ApplicationJob
   queue_as :default
 
   MONITOR_DURATION = 10.minutes
 
-  def perform(wallet_address, network: "mainnet")
+  def perform(wallet_address)
     cache_key = "wallet_monitor/#{wallet_address}/active"
-    return if Rails.cache.read(cache_key) # Already monitoring
+    return if Rails.cache.read(cache_key)
 
     Rails.cache.write(cache_key, true, expires_in: MONITOR_DURATION)
 
-    ws_url = ws_url_for(network)
-
+    ws_url = SolanaConfig.ws_url
     if ws_url.present?
-      monitor_via_websocket(wallet_address, network, ws_url)
+      monitor_via_websocket(wallet_address)
     else
-      monitor_via_polling(wallet_address, network)
+      monitor_via_polling(wallet_address)
     end
   ensure
     Rails.cache.delete("wallet_monitor/#{wallet_address}/active")
@@ -24,42 +24,37 @@ class WalletMonitorJob < ApplicationJob
 
   private
 
-  def monitor_via_websocket(wallet_address, network, ws_url)
-    monitor = SolanaWebsocketMonitor.new(wallet_address, network: network)
+  def monitor_via_websocket(wallet_address)
+    monitor = SolanaWebsocketMonitor.new(wallet_address)
     monitor.start
-
-    # Run for MONITOR_DURATION then stop
     sleep MONITOR_DURATION
     monitor.stop
   end
 
-  def monitor_via_polling(wallet_address, network, started_at: Time.current)
-    client = SolanaClient.new(rpc_url: SolanaConfig.rpc_url(network))
-
+  def monitor_via_polling(wallet_address, started_at: Time.current)
+    client = SolanaClient.new
     cache_key = "wallet_monitor/#{wallet_address}/last_sig"
+
     signatures = client.get_recent_signatures(wallet_address, limit: 1)
     latest_sig = signatures.first&.dig(:signature)
-
     previous_sig = Rails.cache.read(cache_key)
 
     if latest_sig && latest_sig != previous_sig
       Rails.cache.write(cache_key, latest_sig, expires_in: 1.hour)
-      broadcast_update(wallet_address, network) if previous_sig
+      broadcast_update(wallet_address) if previous_sig
     end
 
     if Time.current - started_at < MONITOR_DURATION
       sleep 15
-      monitor_via_polling(wallet_address, network, started_at: started_at)
+      monitor_via_polling(wallet_address, started_at: started_at)
     end
   end
 
-  def broadcast_update(wallet_address, network)
-    SolanaConfig::NETWORKS.each do |net|
-      Rails.cache.delete("wallet/#{net}/#{wallet_address}/tokens_v2")
-      Rails.cache.delete("wallet/#{net}/#{wallet_address}/recent_txs")
-    end
+  def broadcast_update(wallet_address)
+    Rails.cache.delete("wallet/#{wallet_address}/tokens")
+    Rails.cache.delete("wallet/#{wallet_address}/recent_txs")
 
-    portfolio = WalletPortfolioService.new(wallet_address, network: network)
+    portfolio = WalletPortfolioService.new(wallet_address)
     stream = "wallet_#{wallet_address}"
 
     Turbo::StreamsChannel.broadcast_replace_to(
@@ -74,17 +69,10 @@ class WalletMonitorJob < ApplicationJob
       locals: { tokens: portfolio.tokens }
     )
 
-    explorer_base = network == "mainnet" ? "https://solscan.io" : "https://explorer.solana.com"
-    explorer_cluster = network == "mainnet" ? "" : "?cluster=#{network}"
-
     Turbo::StreamsChannel.broadcast_replace_to(
       stream, target: "recent_activity",
       partial: "dashboard/recent_activity",
-      locals: { transactions: portfolio.recent_transactions, wallet_address: wallet_address, explorer_base: explorer_base, explorer_cluster: explorer_cluster }
+      locals: { transactions: portfolio.recent_transactions, wallet_address: wallet_address }
     )
-  end
-
-  def ws_url_for(network)
-    SolanaConfig.ws_url(network)
   end
 end

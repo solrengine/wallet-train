@@ -2,28 +2,23 @@
 class TokenMetadataService
   SOL_MINT = "So11111111111111111111111111111111111111112"
 
-  def initialize(network: "mainnet", rpc_url: nil)
-    @network = network
-    @client = SolanaClient.new(rpc_url: rpc_url)
-    @mainnet = (network == "mainnet")
+  def initialize
+    @client = SolanaClient.new
   end
 
-  # Returns all tokens for a wallet with metadata and USD values.
   def token_balances_for(wallet_address)
     sol_balance = @client.get_balance(wallet_address)
     accounts = @client.get_token_accounts(wallet_address)
 
     all_mints = [ SOL_MINT ] + accounts.map { |a| a[:mint] }
 
-    # Metadata from DB (fetches from Jupiter only for new mints)
     token_records = Token.find_or_fetch_many(all_mints)
 
     # Prices only available on mainnet
-    prices = @mainnet ? JupiterClient.fetch_prices(all_mints) : {}
+    prices = SolanaConfig.mainnet? ? JupiterClient.fetch_prices(all_mints) : {}
 
     tokens = []
 
-    # SOL entry
     if sol_balance
       sol_token = token_records[SOL_MINT]
       sol_price = prices[SOL_MINT]
@@ -38,7 +33,6 @@ class TokenMetadataService
       tokens << entry
     end
 
-    # SPL tokens
     accounts.each do |account|
       token = token_records[account[:mint]]
       price = prices[account[:mint]]

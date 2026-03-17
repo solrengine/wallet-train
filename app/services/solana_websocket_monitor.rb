@@ -2,14 +2,13 @@ require "json"
 require "websocket-client-simple"
 
 # Subscribes to Solana WebSocket RPC for real-time account changes.
-# Runs as a background thread and broadcasts updates via Turbo Streams.
+# Broadcasts updates via Turbo Streams when the account balance changes.
 class SolanaWebsocketMonitor
   RECONNECT_DELAY = 5
 
-  def initialize(wallet_address, network: "mainnet")
+  def initialize(wallet_address)
     @wallet_address = wallet_address
-    @network = network
-    @ws_url = SolanaConfig.ws_url(network)
+    @ws_url = SolanaConfig.ws_url
     @running = false
   end
 
@@ -42,7 +41,7 @@ class SolanaWebsocketMonitor
     monitor = self
 
     ws.on :open do
-      Rails.logger.info("[SolanaWS] Connected for #{monitor.send(:@wallet_address)}")
+      Rails.logger.info("[SolanaWS] Connected for #{monitor.send(:@wallet_address)} on #{SolanaConfig.network}")
       ws.send({
         jsonrpc: "2.0",
         id: 1,
@@ -86,12 +85,10 @@ class SolanaWebsocketMonitor
   end
 
   def broadcast_update
-    SolanaConfig::NETWORKS.each do |net|
-      Rails.cache.delete("wallet/#{net}/#{@wallet_address}/tokens_v2")
-      Rails.cache.delete("wallet/#{net}/#{@wallet_address}/recent_txs")
-    end
+    Rails.cache.delete("wallet/#{@wallet_address}/tokens")
+    Rails.cache.delete("wallet/#{@wallet_address}/recent_txs")
 
-    portfolio = WalletPortfolioService.new(@wallet_address, network: @network)
+    portfolio = WalletPortfolioService.new(@wallet_address)
     stream = "wallet_#{@wallet_address}"
 
     Turbo::StreamsChannel.broadcast_replace_to(
@@ -106,13 +103,10 @@ class SolanaWebsocketMonitor
       locals: { tokens: portfolio.tokens }
     )
 
-    explorer_base = @network == "mainnet" ? "https://solscan.io" : "https://explorer.solana.com"
-    explorer_cluster = @network == "mainnet" ? "" : "?cluster=#{@network}"
-
     Turbo::StreamsChannel.broadcast_replace_to(
       stream, target: "recent_activity",
       partial: "dashboard/recent_activity",
-      locals: { transactions: portfolio.recent_transactions, wallet_address: @wallet_address, explorer_base: explorer_base, explorer_cluster: explorer_cluster }
+      locals: { transactions: portfolio.recent_transactions, wallet_address: @wallet_address }
     )
   end
 end

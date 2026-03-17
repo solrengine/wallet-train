@@ -1,6 +1,3 @@
-<% base = local_assigns[:explorer_base] || "https://solscan.io" %>
-<% cluster = local_assigns[:explorer_cluster] || "" %>
-
 <div id="recent_activity" class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl overflow-hidden">
   <div class="px-5 py-3 border-b border-gray-700">
     <h3 class="text-sm font-semibold text-white">Recent Activity</h3>
@@ -24,7 +21,7 @@
                 </svg>
               </div>
             <% end %>
-            <a href="<%= base %>/tx/<%= tx[:signature] %><%= cluster %>"
+            <a href="<%= SolanaConfig.explorer_base %>/tx/<%= tx[:signature] %><%= SolanaConfig.explorer_cluster %>"
                target="_blank"
                class="text-purple-400 hover:text-purple-300 font-mono text-xs transition-colors">
               <%= tx[:signature][0..7] %>...<%= tx[:signature][-4..] %>
@@ -39,7 +36,7 @@
       <% end %>
     </div>
     <div class="px-5 py-3 border-t border-gray-700">
-      <a href="<%= base %>/account/<%= wallet_address %><%= cluster %>"
+      <a href="<%= SolanaConfig.explorer_base %>/account/<%= wallet_address %><%= SolanaConfig.explorer_cluster %>"
          target="_blank"
          class="text-purple-400 hover:text-purple-300 text-xs transition-colors flex items-center justify-center gap-1">
         View all on Explorer

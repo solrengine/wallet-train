@@ -18,8 +18,6 @@ Rails.application.routes.draw do
     end
   end
 
-  # Network switching
-  patch "network", to: "networks#update", as: :network
 
   root "sessions#new"
 end

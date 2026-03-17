@@ -1,4 +1,5 @@
 default: &default
+  network: <%= ENV.fetch("SOLANA_NETWORK", "mainnet") %>
   networks:
     mainnet:
       rpc_url: <%= ENV.fetch("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com") %>
