@@ -6,7 +6,6 @@ class SessionsController < ApplicationController
   end
 
   # GET /auth/nonce?wallet_address=...
-  # Returns a nonce for the wallet to sign
   def nonce
     wallet_address = params[:wallet_address]
 
@@ -15,8 +14,8 @@ class SessionsController < ApplicationController
     end
 
     user = User.find_or_initialize_by(wallet_address: wallet_address)
-    user.nonce = SecureRandom.hex(16)
-    user.save!
+    user.generate_nonce! if user.persisted?
+    user.save! unless user.persisted?
 
     message = SiwsMessageBuilder.new(
       domain: siws_domain,
@@ -29,7 +28,6 @@ class SessionsController < ApplicationController
   end
 
   # POST /auth/verify
-  # Verifies the signed message and creates a session
   def create
     wallet_address = params[:wallet_address]
     message = params[:message]
@@ -37,8 +35,8 @@ class SessionsController < ApplicationController
 
     user = User.find_by(wallet_address: wallet_address)
 
-    unless user&.nonce.present?
-      return render json: { error: "No pending authentication" }, status: :unprocessable_entity
+    unless user&.nonce_valid?
+      return render json: { error: "Authentication expired. Please try again." }, status: :unprocessable_entity
     end
 
     verifier = SiwsVerifier.new(

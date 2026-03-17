@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_16_085055) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_17_045412) do
   create_table "tokens", force: :cascade do |t|
     t.string "mint", null: false
     t.string "name"
@@ -44,6 +44,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_16_085055) do
     t.string "nonce"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "nonce_expires_at"
     t.index ["wallet_address"], name: "index_users_on_wallet_address", unique: true
   end
 

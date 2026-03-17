@@ -30,16 +30,36 @@ class UserTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:wallet_address], "has already been taken"
   end
 
-  test "generates nonce on create" do
+  test "generates nonce and expiration on create" do
     user = User.create!(wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg")
     assert_not_nil user.nonce
-    assert_equal 32, user.nonce.length # hex(16) = 32 chars
+    assert_equal 32, user.nonce.length
+    assert_not_nil user.nonce_expires_at
+    assert user.nonce_expires_at > Time.current
   end
 
-  test "generate_nonce! updates the nonce" do
+  test "generate_nonce! updates nonce and expiration" do
     user = User.create!(wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg")
     old_nonce = user.nonce
     user.generate_nonce!
     assert_not_equal old_nonce, user.nonce
+    assert user.nonce_expires_at > Time.current
+  end
+
+  test "nonce_valid? returns true for fresh nonce" do
+    user = User.create!(wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg")
+    assert user.nonce_valid?
+  end
+
+  test "nonce_valid? returns false for expired nonce" do
+    user = User.create!(wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg")
+    user.update!(nonce_expires_at: 1.minute.ago)
+    assert_not user.nonce_valid?
+  end
+
+  test "nonce_valid? returns false when nonce is nil" do
+    user = User.create!(wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg")
+    user.update!(nonce: nil)
+    assert_not user.nonce_valid?
   end
 end

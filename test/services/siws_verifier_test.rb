@@ -100,4 +100,37 @@ class SiwsVerifierTest < ActiveSupport::TestCase
     )
     assert_not verifier.verify
   end
+
+  test "rejects message with wrong domain" do
+    evil_message = SiwsMessageBuilder.new(
+      domain: "evil.com",
+      wallet_address: @wallet_address,
+      nonce: @nonce
+    ).build
+    evil_signature = @signing_key.sign(evil_message)
+
+    verifier = SiwsVerifier.new(
+      wallet_address: @wallet_address,
+      message: evil_message,
+      signature: evil_signature.bytes.join(",")
+    )
+    assert_not verifier.verify
+  end
+
+  test "verify! raises on wrong domain" do
+    evil_message = SiwsMessageBuilder.new(
+      domain: "evil.com",
+      wallet_address: @wallet_address,
+      nonce: @nonce
+    ).build
+    evil_signature = @signing_key.sign(evil_message)
+
+    verifier = SiwsVerifier.new(
+      wallet_address: @wallet_address,
+      message: evil_message,
+      signature: evil_signature.bytes.join(",")
+    )
+    error = assert_raises(SiwsVerifier::VerificationError) { verifier.verify! }
+    assert_includes error.message, "domain does not match"
+  end
 end

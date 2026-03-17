@@ -4,7 +4,8 @@ require "base58"
 # Sign In With Solana (SIWS) verification service.
 #
 # Verifies that a message was signed by the claimed Solana wallet address
-# using Ed25519 signature verification.
+# using Ed25519 signature verification. Also validates the message domain
+# to prevent cross-site replay attacks.
 class SiwsVerifier
   class VerificationError < StandardError; end
 
@@ -18,6 +19,7 @@ class SiwsVerifier
 
   def verify!
     verify_message_format!
+    verify_domain!
     verify_signature!
     true
   rescue Ed25519::VerifyError
@@ -37,9 +39,15 @@ class SiwsVerifier
       raise VerificationError, "Message does not contain the claimed wallet address"
     end
 
-    nonce = extract_nonce
-    unless nonce.present?
+    unless extract_nonce.present?
       raise VerificationError, "Message does not contain a nonce"
+    end
+  end
+
+  def verify_domain!
+    first_line = @message.lines.first&.strip
+    unless first_line&.start_with?("#{EXPECTED_DOMAIN} wants you to sign in")
+      raise VerificationError, "Message domain does not match expected domain (#{EXPECTED_DOMAIN})"
     end
   end
 
@@ -58,10 +66,8 @@ class SiwsVerifier
 
   def decode_signature(signature)
     if signature.match?(/\A[0-9,\s]+\z/)
-      # Uint8Array format from JS: "1,2,3,..."
       signature.split(",").map(&:to_i).pack("C*")
     else
-      # Base64 encoded
       Base64.decode64(signature)
     end
   end
