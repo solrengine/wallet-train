@@ -10,6 +10,9 @@ application.register("auto-refresh", AutoRefreshController)
 import ClipboardController from "./clipboard_controller"
 application.register("clipboard", ClipboardController)
 
+import DonateController from "./donate_controller"
+application.register("donate", DonateController)
+
 import TransferController from "./transfer_controller"
 application.register("transfer", TransferController)
 
