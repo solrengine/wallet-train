@@ -1,3 +1,6 @@
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
 <%= turbo_stream_from "wallet_#{@wallet_address}" %>
 
 <% network_colors = { "mainnet" => "bg-green-400", "devnet" => "bg-yellow-400", "testnet" => "bg-blue-400" } %>
