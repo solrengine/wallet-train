@@ -30,6 +30,11 @@ class SolanaWebsocketMonitor
     @ws&.close
   end
 
+  # Called from the WebSocket thread — must be public for callback access
+  def flag_changed!
+    @mutex.synchronize { @account_changed = true }
+  end
+
   private
 
   def websocket_loop
@@ -85,11 +90,6 @@ class SolanaWebsocketMonitor
     end
 
     sleep 1 while @running && !ws.closed?
-  end
-
-  # Called from the WebSocket thread
-  def flag_changed!
-    @mutex.synchronize { @account_changed = true }
   end
 
   # Runs on the main thread — checks the flag every second
