@@ -142,17 +142,17 @@
           <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
           <span class="text-gray-500 text-xs ml-2">siws_verifier.rb</span>
         </div>
-        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-purple-400">class</span> <span class="text-blue-300">SiwsVerifier</span>
+        <pre class="p-4 text-xs leading-relaxed"><code class="text-gray-300"><span class="text-purple-400">class</span> <span class="text-blue-300">SiwsVerifier</span>
   <span class="text-purple-400">def</span> <span class="text-yellow-300">verify!</span>
     verify_message_format!
     verify_domain!
-    verify_signature!  <span class="text-gray-600"># Ed25519</span>
+    verify_signature!
   <span class="text-purple-400">end</span>
 
   <span class="text-purple-400">def</span> <span class="text-yellow-300">verify_signature!</span>
-    pubkey = <span class="text-blue-300">Base58</span>.base58_to_binary(wallet_address)
-    verify_key = <span class="text-blue-300">Ed25519::VerifyKey</span>.new(pubkey)
-    verify_key.verify(signature, message)
+    pubkey = <span class="text-blue-300">Base58</span>.base58_to_binary(addr)
+    key = <span class="text-blue-300">Ed25519::VerifyKey</span>.new(pubkey)
+    key.verify(signature, message)
   <span class="text-purple-400">end</span>
 <span class="text-purple-400">end</span></code></pre>
       </div>
@@ -165,17 +165,15 @@
           <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
           <span class="text-gray-500 text-xs ml-2">sessions_controller.rb</span>
         </div>
-        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-purple-400">class</span> <span class="text-blue-300">SessionsController</span> < <span class="text-blue-300">ApplicationController</span>
-  <span class="text-purple-400">def</span> <span class="text-yellow-300">create</span>
-    verifier = <span class="text-blue-300">SiwsVerifier</span>.new(
-      wallet_address: params[<span class="text-green-400">:wallet_address</span>],
-      message: params[<span class="text-green-400">:message</span>],
-      signature: params[<span class="text-green-400">:signature</span>]
-    )
+        <pre class="p-4 text-xs leading-relaxed"><code class="text-gray-300"><span class="text-purple-400">def</span> <span class="text-yellow-300">create</span>
+  verifier = <span class="text-blue-300">SiwsVerifier</span>.new(
+    wallet_address: params[<span class="text-green-400">:wallet</span>],
+    message: params[<span class="text-green-400">:message</span>],
+    signature: params[<span class="text-green-400">:signature</span>]
+  )
 
-    <span class="text-purple-400">if</span> verifier.verify
-      session[<span class="text-green-400">:user_id</span>] = user.id
-    <span class="text-purple-400">end</span>
+  <span class="text-purple-400">if</span> verifier.verify
+    session[<span class="text-green-400">:user_id</span>] = user.id
   <span class="text-purple-400">end</span>
 <span class="text-purple-400">end</span></code></pre>
       </div>
@@ -186,15 +184,15 @@
           <span class="w-2.5 h-2.5 rounded-full bg-red-500/60"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
-          <span class="text-gray-500 text-xs ml-2">dashboard/show.html.erb</span>
+          <span class="text-gray-500 text-xs ml-2">show.html.erb</span>
         </div>
-        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-gray-600">&lt;%=</span> <span class="text-yellow-300">turbo_stream_from</span> <span class="text-green-400">"wallet_#{@wallet_address}"</span> <span class="text-gray-600">%&gt;</span>
+        <pre class="p-4 text-xs leading-relaxed"><code class="text-gray-300"><span class="text-gray-500">&lt;%=</span> <span class="text-yellow-300">turbo_stream_from</span> <span class="text-green-400">"wallet_#&#123;@address&#125;"</span> <span class="text-gray-500">%&gt;</span>
 
-<span class="text-gray-600">&lt;%=</span> render <span class="text-green-400">"dashboard/portfolio_value"</span> <span class="text-gray-600">%&gt;</span>
-<span class="text-gray-600">&lt;%=</span> render <span class="text-green-400">"dashboard/token_list"</span> <span class="text-gray-600">%&gt;</span>
-<span class="text-gray-600">&lt;%=</span> render <span class="text-green-400">"dashboard/recent_activity"</span> <span class="text-gray-600">%&gt;</span>
+<span class="text-gray-500">&lt;%=</span> render <span class="text-green-400">"portfolio_value"</span> <span class="text-gray-500">%&gt;</span>
+<span class="text-gray-500">&lt;%=</span> render <span class="text-green-400">"token_list"</span> <span class="text-gray-500">%&gt;</span>
+<span class="text-gray-500">&lt;%=</span> render <span class="text-green-400">"recent_activity"</span> <span class="text-gray-500">%&gt;</span>
 
-<span class="text-gray-500">&lt;!-- Solana WebSocket → Turbo Streams → DOM updates --&gt;</span></code></pre>
+<span class="text-gray-600">&lt;!-- WebSocket &rarr; Turbo Streams &rarr; DOM --&gt;</span></code></pre>
       </div>
 
       <%# Code: Stimulus + @solana/kit %>
@@ -205,15 +203,15 @@
           <span class="w-2.5 h-2.5 rounded-full bg-green-500/60"></span>
           <span class="text-gray-500 text-xs ml-2">transfer_controller.js</span>
         </div>
-        <pre class="p-5 text-sm leading-relaxed overflow-x-auto"><code class="text-gray-300"><span class="text-purple-400">import</span> { <span class="text-blue-300">Controller</span> } <span class="text-purple-400">from</span> <span class="text-green-400">"@hotwired/stimulus"</span>
-<span class="text-purple-400">import</span> { <span class="text-blue-300">pipe</span>, <span class="text-blue-300">createTransactionMessage</span>,
-  <span class="text-blue-300">compileTransaction</span> } <span class="text-purple-400">from</span> <span class="text-green-400">"@solana/kit"</span>
+        <pre class="p-4 text-xs leading-relaxed"><code class="text-gray-300"><span class="text-purple-400">import</span> { <span class="text-blue-300">pipe</span>,
+  <span class="text-blue-300">createTransactionMessage</span>,
+  <span class="text-blue-300">compileTransaction</span>
+} <span class="text-purple-400">from</span> <span class="text-green-400">"@solana/kit"</span>
 
-<span class="text-gray-600">// Rails validates → kit builds tx → wallet signs</span>
-<span class="text-purple-400">const</span> txMessage = <span class="text-yellow-300">pipe</span>(
+<span class="text-purple-400">const</span> tx = <span class="text-yellow-300">pipe</span>(
   createTransactionMessage({ <span class="text-blue-300">version</span>: <span class="text-green-400">0</span> }),
-  tx => setTransactionMessageFeePayer(sender, tx),
-  tx => appendTransactionMessageInstruction(ix, tx),
+  tx => setFeePayer(sender, tx),
+  tx => appendInstruction(ix, tx),
 )</code></pre>
       </div>
     </div>
