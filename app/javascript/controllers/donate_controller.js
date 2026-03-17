@@ -86,14 +86,15 @@ export default class extends Controller {
   }
 
   async executeDonation(amount, button) {
-    const originalText = button.textContent
+    const originalHTML = button.innerHTML
     button.disabled = true
-    button.textContent = "Connecting..."
+    button.classList.add("opacity-70")
+    this.setButtonSpinner(button, "Connecting...")
 
     try {
       const { wallet, account } = await this.connectWallet(this.selectedWallet)
 
-      button.textContent = "Sign in wallet..."
+      this.setButtonSpinner(button, "Sign in wallet...")
       const txBytes = await this.buildTransaction(account.address, amount)
 
       const chain = this.rpcUrlValue.includes("devnet") ? "solana:devnet"
@@ -110,12 +111,25 @@ export default class extends Controller {
       const decoder = getBase58Decoder()
       const signature = decoder.decode(sigBytes)
 
-      this.showStatus(`Sent ${amount} SOL! ${signature.slice(0, 8)}...`, "success")
-      button.textContent = "Sent!"
+      // Success state
+      button.classList.remove("opacity-70")
+      button.classList.add("border-green-500/50")
+      button.innerHTML = `
+        <div class="w-10 h-10 rounded-xl bg-green-900/30 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <p class="text-green-400 font-semibold text-sm">Sent!</p>
+        <p class="text-gray-500 text-xs">${amount} SOL</p>
+      `
+      this.showStatus(`${signature.slice(0, 12)}...`, "success")
+
       setTimeout(() => {
-        button.textContent = originalText
+        button.innerHTML = originalHTML
         button.disabled = false
-      }, 3000)
+        button.classList.remove("border-green-500/50")
+      }, 4000)
 
     } catch (error) {
       console.error("Donate error:", error)
@@ -124,9 +138,19 @@ export default class extends Controller {
       } else {
         this.showStatus(error.message || "Failed", "error")
       }
-      button.textContent = originalText
+      button.innerHTML = originalHTML
       button.disabled = false
+      button.classList.remove("opacity-70")
     }
+  }
+
+  setButtonSpinner(button, text) {
+    button.innerHTML = `
+      <div class="flex flex-col items-center gap-2 py-1">
+        <div class="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-gray-400 text-xs">${text}</p>
+      </div>
+    `
   }
 
   async connectWallet(wallet) {
