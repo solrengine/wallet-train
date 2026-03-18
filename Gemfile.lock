@@ -10,7 +10,7 @@ GIT
 
 GIT
   remote: https://github.com/solrengine/solrengine-realtime.git
-  revision: b8b6f736d0a69d8dc373d954644d7bd105bda541
+  revision: c91bf7adedaab41a1b958b73b8a4ad7f72bd1cc3
   branch: main
   specs:
     solrengine-realtime (0.1.0)
@@ -206,7 +206,7 @@ GEM
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
     logger (1.7.0)
-    loofah (2.25.0)
+    loofah (2.25.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
     mail (2.9.0)
