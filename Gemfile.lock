@@ -9,6 +9,16 @@ GIT
       rails (>= 7.1)
 
 GIT
+  remote: https://github.com/solrengine/solrengine-realtime.git
+  revision: b8b6f736d0a69d8dc373d954644d7bd105bda541
+  branch: main
+  specs:
+    solrengine-realtime (0.1.0)
+      rails (>= 7.1)
+      solrengine-rpc (~> 0.1)
+      websocket-client-simple (~> 0.9)
+
+GIT
   remote: https://github.com/solrengine/solrengine-rpc.git
   revision: bb06fc650125a1583a2328f6093d595f4b6aa621
   branch: main
@@ -445,6 +455,7 @@ DEPENDENCIES
   solid_cache
   solid_queue
   solrengine-auth!
+  solrengine-realtime!
   solrengine-rpc!
   solrengine-tokens!
   solrengine-transactions!
@@ -454,7 +465,6 @@ DEPENDENCIES
   turbo-rails
   tzinfo-data
   web-console
-  websocket-client-simple (~> 0.9.0)
 
 BUNDLED WITH
    2.7.1
