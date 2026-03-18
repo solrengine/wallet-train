@@ -1,6 +1,8 @@
-# Solana on Rails
+# WalletTrain
 
-A Rails 8 application that integrates with the Solana blockchain. Wallet-based authentication, token portfolio, real-time updates, and SOL transfers — all using the Rails default stack.
+A full-featured Solana wallet dapp built with Ruby on Rails 8. Wallet-based authentication, token portfolio, real-time updates, and SOL transfers — all using the Rails default stack.
+
+Part of the [SolRengine](https://github.com/solrengine) project.
 
 ## Stack
 
