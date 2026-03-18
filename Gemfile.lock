@@ -1,6 +1,6 @@
 GIT
-  remote: https://github.com/solrengine/solrengine-auth.git
-  revision: 142f726fc7ae3e5cc9e3b8529fa904300d64feac
+  remote: https://github.com/solrengine/auth.git
+  revision: 8eeb1a92ee2710fa4fb1041ae2941e697b839417
   branch: main
   specs:
     solrengine-auth (0.1.0)
@@ -9,8 +9,8 @@ GIT
       rails (>= 7.1)
 
 GIT
-  remote: https://github.com/solrengine/solrengine-realtime.git
-  revision: 108ca0f0a5f8597ea27241d0018a8a231afd84dd
+  remote: https://github.com/solrengine/realtime.git
+  revision: 99b64769c6e7a9f6430e005d3578246778e2da12
   branch: main
   specs:
     solrengine-realtime (0.1.0)
@@ -19,16 +19,16 @@ GIT
       websocket-client-simple (~> 0.9)
 
 GIT
-  remote: https://github.com/solrengine/solrengine-rpc.git
-  revision: bb06fc650125a1583a2328f6093d595f4b6aa621
+  remote: https://github.com/solrengine/rpc.git
+  revision: dcf68a7de7cc3017c94deed23ebad1d94a215fd0
   branch: main
   specs:
     solrengine-rpc (0.1.0)
       rails (>= 7.1)
 
 GIT
-  remote: https://github.com/solrengine/solrengine-tokens.git
-  revision: 30f655977995dd66abb27aa8942e688230e99b64
+  remote: https://github.com/solrengine/tokens.git
+  revision: 690966cd09887b6dc52a76f486308a5c268c8945
   branch: main
   specs:
     solrengine-tokens (0.1.0)
@@ -36,8 +36,8 @@ GIT
       solrengine-rpc (~> 0.1)
 
 GIT
-  remote: https://github.com/solrengine/solrengine-transactions.git
-  revision: 94bfa988a78d9b49eaca2389bae8dc394ad46f1b
+  remote: https://github.com/solrengine/transactions.git
+  revision: 57d43622db0480c41ccbe774dd8542b7cddbc341
   branch: main
   specs:
     solrengine-transactions (0.1.0)
