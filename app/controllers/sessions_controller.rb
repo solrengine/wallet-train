@@ -2,10 +2,8 @@ class SessionsController < ApplicationController
   skip_before_action :authenticate!, only: [ :new, :nonce, :create ]
 
   def new
-    # Login page — rendered by Stimulus wallet controller
   end
 
-  # GET /auth/nonce?wallet_address=...
   def nonce
     wallet_address = params[:wallet_address]
 
@@ -17,8 +15,9 @@ class SessionsController < ApplicationController
     user.generate_nonce! if user.persisted?
     user.save! unless user.persisted?
 
-    message = SiwsMessageBuilder.new(
-      domain: siws_domain,
+    domain = Solrengine::Auth.configuration.domain
+    message = Solrengine::Auth::SiwsMessageBuilder.new(
+      domain: domain,
       wallet_address: wallet_address,
       nonce: user.nonce,
       uri: request.base_url
@@ -27,7 +26,6 @@ class SessionsController < ApplicationController
     render json: { message: message, nonce: user.nonce }
   end
 
-  # POST /auth/verify
   def create
     wallet_address = params[:wallet_address]
     message = params[:message]
@@ -39,7 +37,7 @@ class SessionsController < ApplicationController
       return render json: { error: "Authentication expired. Please try again." }, status: :unprocessable_entity
     end
 
-    verifier = SiwsVerifier.new(
+    verifier = Solrengine::Auth::SiwsVerifier.new(
       wallet_address: wallet_address,
       message: message,
       signature: signature
@@ -49,22 +47,14 @@ class SessionsController < ApplicationController
       return render json: { error: "Signature verification failed" }, status: :unauthorized
     end
 
-    # Invalidate the nonce after use
     user.generate_nonce!
 
     session[:user_id] = user.id
     render json: { success: true, wallet_address: user.wallet_address }
   end
 
-  # DELETE /auth/logout
   def destroy
     reset_session
     redirect_to root_path, notice: "Disconnected"
-  end
-
-  private
-
-  def siws_domain
-    Rails.application.config_for(:siws).fetch(:domain, "localhost")
   end
 end

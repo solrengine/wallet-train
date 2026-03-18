@@ -2,7 +2,7 @@ require "test_helper"
 
 class SiwsMessageBuilderTest < ActiveSupport::TestCase
   test "builds message with required fields" do
-    message = SiwsMessageBuilder.new(
+    message = Solrengine::Auth::SiwsMessageBuilder.new(
       domain: "localhost",
       wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
       nonce: "abc123def456",
@@ -19,7 +19,7 @@ class SiwsMessageBuilderTest < ActiveSupport::TestCase
   end
 
   test "includes custom statement" do
-    message = SiwsMessageBuilder.new(
+    message = Solrengine::Auth::SiwsMessageBuilder.new(
       domain: "example.com",
       wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
       nonce: "abc123",
@@ -30,7 +30,7 @@ class SiwsMessageBuilderTest < ActiveSupport::TestCase
   end
 
   test "uses default statement when none provided" do
-    message = SiwsMessageBuilder.new(
+    message = Solrengine::Auth::SiwsMessageBuilder.new(
       domain: "myapp.com",
       wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
       nonce: "abc123"

@@ -1,3 +1,13 @@
+GIT
+  remote: https://github.com/solrengine/solrengine-auth.git
+  revision: 142f726fc7ae3e5cc9e3b8529fa904300d64feac
+  branch: main
+  specs:
+    solrengine-auth (0.1.0)
+      base58 (~> 0.2)
+      ed25519 (~> 1.4)
+      rails (>= 7.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -392,13 +402,11 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  base58 (~> 0.2.3)
   bootsnap
   brakeman
   cssbundling-rails
   debug
   dotenv-rails (~> 3.2)
-  ed25519 (~> 1.4)
   hotwire-livereload (~> 2.1)
   jbuilder
   jsbundling-rails
@@ -410,6 +418,7 @@ DEPENDENCIES
   solid_cable
   solid_cache
   solid_queue
+  solrengine-auth!
   sqlite3 (>= 2.1)
   stimulus-rails
   thruster

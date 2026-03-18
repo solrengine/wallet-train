@@ -58,8 +58,7 @@ group :development do
   gem "web-console"
 end
 
-gem "ed25519", "~> 1.4"
-gem "base58", "~> 0.2.3"
+gem "solrengine-auth", github: "solrengine/solrengine-auth", branch: "main"
 
 gem "hotwire-livereload", "~> 2.1", group: :development
 

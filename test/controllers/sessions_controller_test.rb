@@ -60,7 +60,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     user = User.create!(wallet_address: "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg")
     user.update!(nonce: "testnonce123")
 
-    message = SiwsMessageBuilder.new(
+    message = Solrengine::Auth::SiwsMessageBuilder.new(
       domain: "localhost",
       wallet_address: user.wallet_address,
       nonce: user.nonce
