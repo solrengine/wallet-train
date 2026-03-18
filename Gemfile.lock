@@ -8,6 +8,14 @@ GIT
       ed25519 (~> 1.4)
       rails (>= 7.1)
 
+GIT
+  remote: https://github.com/solrengine/solrengine-rpc.git
+  revision: bb06fc650125a1583a2328f6093d595f4b6aa621
+  branch: main
+  specs:
+    solrengine-rpc (0.1.0)
+      rails (>= 7.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -419,6 +427,7 @@ DEPENDENCIES
   solid_cache
   solid_queue
   solrengine-auth!
+  solrengine-rpc!
   sqlite3 (>= 2.1)
   stimulus-rails
   thruster

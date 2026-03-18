@@ -3,7 +3,7 @@ require "json"
 # Client for Jupiter's free token API (lite-api.jup.ag).
 # Used for token metadata (persisted to DB) and prices (cached short-term).
 class JupiterClient
-  include SslHttpClient
+  include Solrengine::Rpc::SslHttp
 
   BASE_URL = "https://lite-api.jup.ag/tokens/v2"
 

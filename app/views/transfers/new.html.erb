@@ -12,7 +12,7 @@
         <% end %>
         <h1 class="text-lg font-bold text-white">Send SOL</h1>
       </div>
-      <span class="text-gray-500 text-xs font-mono"><%= SolanaConfig.network.capitalize %></span>
+      <span class="text-gray-500 text-xs font-mono"><%= Solrengine::Rpc.configuration.network.capitalize %></span>
     </div>
   </nav>
 
@@ -23,7 +23,7 @@
          data-transfer-dashboard-url-value="<%= dashboard_path %>"
          data-transfer-wallet-value="<%= @wallet_address %>"
          data-transfer-balance-value="<%= @balance || 0 %>"
-         data-transfer-rpc-url-value="<%= SolanaConfig.rpc_url %>">
+         data-transfer-rpc-url-value="<%= Solrengine::Rpc.configuration.rpc_url %>">
 
       <%# Status messages %>
       <div data-transfer-target="status" class="hidden mb-4 p-3 rounded-lg text-sm text-center"></div>

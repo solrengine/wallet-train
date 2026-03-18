@@ -59,6 +59,7 @@ group :development do
 end
 
 gem "solrengine-auth", github: "solrengine/solrengine-auth", branch: "main"
+gem "solrengine-rpc", github: "solrengine/solrengine-rpc", branch: "main"
 
 gem "hotwire-livereload", "~> 2.1", group: :development
 

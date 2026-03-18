@@ -21,7 +21,7 @@
                 </svg>
               </div>
             <% end %>
-            <a href="<%= SolanaConfig.explorer_base %>/tx/<%= tx[:signature] %><%= SolanaConfig.explorer_cluster %>"
+            <a href="<%= Solrengine::Rpc.configuration.explorer_base %>/tx/<%= tx[:signature] %><%= Solrengine::Rpc.configuration.explorer_cluster %>"
                target="_blank"
                class="text-purple-400 hover:text-purple-300 font-mono text-xs transition-colors">
               <%= tx[:signature][0..7] %>...<%= tx[:signature][-4..] %>
@@ -36,7 +36,7 @@
       <% end %>
     </div>
     <div class="px-5 py-3 border-t border-gray-700">
-      <a href="<%= SolanaConfig.explorer_base %>/account/<%= wallet_address %><%= SolanaConfig.explorer_cluster %>"
+      <a href="<%= Solrengine::Rpc.configuration.explorer_base %>/account/<%= wallet_address %><%= Solrengine::Rpc.configuration.explorer_cluster %>"
          target="_blank"
          class="text-purple-400 hover:text-purple-300 text-xs transition-colors flex items-center justify-center gap-1">
         View all on Explorer

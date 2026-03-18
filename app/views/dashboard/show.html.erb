@@ -13,8 +13,8 @@
       <div class="flex items-center gap-3">
         <%# Network badge %>
         <span class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-800 px-2.5 py-1.5 rounded-lg">
-          <span class="w-1.5 h-1.5 <%= network_colors[SolanaConfig.network] %> rounded-full"></span>
-          <%= SolanaConfig.network.capitalize %>
+          <span class="w-1.5 h-1.5 <%= network_colors[Solrengine::Rpc.configuration.network] %> rounded-full"></span>
+          <%= Solrengine::Rpc.configuration.network.capitalize %>
         </span>
 
         <%# Wallet address (click to copy) %>

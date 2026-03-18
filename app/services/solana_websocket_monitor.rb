@@ -8,7 +8,7 @@ class SolanaWebsocketMonitor
 
   def initialize(wallet_address)
     @wallet_address = wallet_address
-    @ws_url = SolanaConfig.ws_url
+    @ws_url = Solrengine::Rpc.configuration.ws_url
     @running = false
     @account_changed = false
     @mutex = Mutex.new
@@ -55,7 +55,7 @@ class SolanaWebsocketMonitor
     monitor = self
 
     ws.on :open do
-      Rails.logger.info("[SolanaWS] Connected for #{wallet_address} on #{SolanaConfig.network}")
+      Rails.logger.info("[SolanaWS] Connected for #{wallet_address} on #{Solrengine::Rpc.configuration.network}")
       ws.send({
         jsonrpc: "2.0",
         id: 1,

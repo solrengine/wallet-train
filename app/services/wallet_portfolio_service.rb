@@ -2,7 +2,7 @@
 class WalletPortfolioService
   def initialize(wallet_address)
     @wallet_address = wallet_address
-    @solana_client = SolanaClient.new
+    @solana_client = Solrengine::Rpc.client
     @token_service = TokenMetadataService.new
   end
 

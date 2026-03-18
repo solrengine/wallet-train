@@ -3,7 +3,7 @@ class TokenMetadataService
   SOL_MINT = "So11111111111111111111111111111111111111112"
 
   def initialize
-    @client = SolanaClient.new
+    @client = Solrengine::Rpc.client
   end
 
   def token_balances_for(wallet_address)
@@ -15,7 +15,7 @@ class TokenMetadataService
     token_records = Token.find_or_fetch_many(all_mints)
 
     # Prices only available on mainnet
-    prices = SolanaConfig.mainnet? ? JupiterClient.fetch_prices(all_mints) : {}
+    prices = Solrengine::Rpc.configuration.mainnet? ? JupiterClient.fetch_prices(all_mints) : {}
 
     tokens = []
 

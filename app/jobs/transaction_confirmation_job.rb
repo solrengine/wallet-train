@@ -11,7 +11,7 @@ class TransactionConfirmationJob < ApplicationJob
     return unless transfer&.signature
     return if transfer.confirmed? || transfer.failed?
 
-    client = SolanaClient.new
+    client = Solrengine::Rpc.client
 
     status_info = client.get_signature_status(transfer.signature)
 

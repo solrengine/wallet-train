@@ -1,7 +1,7 @@
 class TransfersController < ApplicationController
   def new
     @wallet_address = current_user.wallet_address
-    @balance = SolanaClient.new.get_balance(@wallet_address)
+    @balance = Solrengine::Rpc.client.get_balance(@wallet_address)
   end
 
   def create
@@ -22,7 +22,7 @@ class TransfersController < ApplicationController
 
     amount_lamports = (amount_sol * 1_000_000_000).to_i
 
-    client = SolanaClient.new
+    client = Solrengine::Rpc.client
     balance = client.get_balance(current_user.wallet_address)
 
     if balance.nil? || (balance * 1_000_000_000).to_i < amount_lamports + 5000
@@ -38,7 +38,7 @@ class TransfersController < ApplicationController
       recipient: recipient,
       amount_lamports: amount_lamports,
       amount_sol: amount_sol,
-      network: SolanaConfig.network,
+      network: Solrengine::Rpc.configuration.network,
       status: "pending"
     )
 
@@ -48,7 +48,7 @@ class TransfersController < ApplicationController
       recipient: recipient,
       amount_lamports: amount_lamports,
       blockhash: blockhash,
-      rpc_url: SolanaConfig.rpc_url
+      rpc_url: Solrengine::Rpc.configuration.rpc_url
     }
   end
 
