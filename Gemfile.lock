@@ -16,6 +16,15 @@ GIT
     solrengine-rpc (0.1.0)
       rails (>= 7.1)
 
+GIT
+  remote: https://github.com/solrengine/solrengine-tokens.git
+  revision: 30f655977995dd66abb27aa8942e688230e99b64
+  branch: main
+  specs:
+    solrengine-tokens (0.1.0)
+      rails (>= 7.1)
+      solrengine-rpc (~> 0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -428,6 +437,7 @@ DEPENDENCIES
   solid_queue
   solrengine-auth!
   solrengine-rpc!
+  solrengine-tokens!
   sqlite3 (>= 2.1)
   stimulus-rails
   thruster

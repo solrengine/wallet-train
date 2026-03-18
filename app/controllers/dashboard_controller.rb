@@ -13,7 +13,7 @@ class DashboardController < ApplicationController
       Rails.cache.delete("wallet/#{@wallet_address}/recent_txs")
     end
 
-    portfolio = WalletPortfolioService.new(@wallet_address)
+    portfolio = Solrengine::Tokens::Portfolio.new(@wallet_address)
     @tokens = portfolio.tokens
     @total_usd = portfolio.total_usd_value
     @transactions = portfolio.recent_transactions

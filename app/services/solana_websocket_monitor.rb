@@ -116,7 +116,7 @@ class SolanaWebsocketMonitor
     Rails.cache.delete("wallet/#{@wallet_address}/tokens")
     Rails.cache.delete("wallet/#{@wallet_address}/recent_txs")
 
-    portfolio = WalletPortfolioService.new(@wallet_address)
+    portfolio = Solrengine::Tokens::Portfolio.new(@wallet_address)
     stream = "wallet_#{@wallet_address}"
 
     Turbo::StreamsChannel.broadcast_replace_to(
