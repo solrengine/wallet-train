@@ -25,6 +25,15 @@ GIT
       rails (>= 7.1)
       solrengine-rpc (~> 0.1)
 
+GIT
+  remote: https://github.com/solrengine/solrengine-transactions.git
+  revision: 94bfa988a78d9b49eaca2389bae8dc394ad46f1b
+  branch: main
+  specs:
+    solrengine-transactions (0.1.0)
+      rails (>= 7.1)
+      solrengine-rpc (~> 0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -438,6 +447,7 @@ DEPENDENCIES
   solrengine-auth!
   solrengine-rpc!
   solrengine-tokens!
+  solrengine-transactions!
   sqlite3 (>= 2.1)
   stimulus-rails
   thruster

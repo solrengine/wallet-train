@@ -65,7 +65,7 @@ class TransfersController < ApplicationController
       Rails.cache.delete("wallet/#{wallet}/tokens")
       Rails.cache.delete("wallet/#{wallet}/recent_txs")
 
-      TransactionConfirmationJob.perform_later(transfer.id)
+      Solrengine::Transactions::ConfirmationJob.perform_later(transfer.id)
     end
 
     render json: { success: true, transfer_id: transfer.id }
