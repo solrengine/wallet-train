@@ -2,6 +2,7 @@
   <meta name="turbo-cache-control" content="no-cache">
 <% end %>
 <%= turbo_stream_from "wallet_#{@wallet_address}" %>
+<%= turbo_stream_from "user_transfers_#{current_user.id}" %>
 
 <% network_colors = { "mainnet" => "bg-green-400", "devnet" => "bg-yellow-400", "testnet" => "bg-blue-400" } %>
 

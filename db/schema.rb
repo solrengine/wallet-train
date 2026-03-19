@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_17_045412) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_19_045856) do
   create_table "tokens", force: :cascade do |t|
     t.string "mint", null: false
     t.string "name"
@@ -28,7 +28,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_17_045412) do
     t.integer "user_id", null: false
     t.string "signature"
     t.string "recipient", null: false
-    t.integer "amount_lamports", null: false
+    t.bigint "amount_lamports", null: false
     t.decimal "amount_sol", null: false
     t.string "network", default: "mainnet", null: false
     t.string "status", default: "pending", null: false
@@ -36,6 +36,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_17_045412) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["signature"], name: "index_transfers_on_signature", unique: true
+    t.index ["status"], name: "index_transfers_on_status"
+    t.index ["user_id", "created_at"], name: "index_transfers_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_transfers_on_user_id"
   end
 

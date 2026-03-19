@@ -1,4 +1,6 @@
 class TransfersController < ApplicationController
+  include Solrengine::Transactions::TransferUpdates
+
   def new
     @wallet_address = current_user.wallet_address
     @balance = Solrengine::Rpc.client.get_balance(@wallet_address)
@@ -29,8 +31,8 @@ class TransfersController < ApplicationController
       return render json: { error: "Insufficient balance" }, status: :unprocessable_entity
     end
 
-    blockhash = client.get_latest_blockhash
-    unless blockhash
+    blockhash_info = client.get_latest_blockhash
+    unless blockhash_info
       return render json: { error: "Failed to fetch blockhash. Try again." }, status: :unprocessable_entity
     end
 
@@ -47,20 +49,23 @@ class TransfersController < ApplicationController
       sender: current_user.wallet_address,
       recipient: recipient,
       amount_lamports: amount_lamports,
-      blockhash: blockhash,
-      rpc_url: Solrengine::Rpc.configuration.rpc_url
+      blockhash: blockhash_info[:blockhash],
+      last_valid_block_height: blockhash_info[:last_valid_block_height]
     }
   end
 
   def update
-    transfer = current_user.transfers.find(params[:id])
+    transfer = find_user_transfer
     signature = params[:signature]
-    status = params[:status] || "submitted"
+    new_status = params[:status] || "submitted"
 
-    transfer.update!(signature: signature, status: status)
+    unless valid_status_transition?(transfer, new_status)
+      return render json: { error: "Invalid status transition" }, status: :unprocessable_entity
+    end
 
-    if status == "submitted" && signature.present?
-      # Clear cached portfolio so dashboard shows fresh data
+    transfer.update!(signature: signature, status: new_status)
+
+    if new_status == "submitted" && signature.present?
       wallet = current_user.wallet_address
       Rails.cache.delete("wallet/#{wallet}/tokens")
       Rails.cache.delete("wallet/#{wallet}/recent_txs")
@@ -72,11 +77,11 @@ class TransfersController < ApplicationController
   end
 
   def show
-    @transfer = current_user.transfers.find(params[:id])
+    @transfer = find_user_transfer
   end
 
   def status
-    transfer = current_user.transfers.find(params[:id])
+    transfer = find_user_transfer
     render json: {
       status: transfer.status,
       signature: transfer.signature,

@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/solrengine/auth.git
-  revision: 8eeb1a92ee2710fa4fb1041ae2941e697b839417
+  revision: 91e2c830b1e5ef8ce524f64587019fc6e97f7070
   branch: main
   specs:
     solrengine-auth (0.1.0)
@@ -20,7 +20,7 @@ GIT
 
 GIT
   remote: https://github.com/solrengine/rpc.git
-  revision: dcf68a7de7cc3017c94deed23ebad1d94a215fd0
+  revision: 3212cfcb3d08864844ead9e52da5989f2c3289ef
   branch: main
   specs:
     solrengine-rpc (0.1.0)
@@ -37,7 +37,7 @@ GIT
 
 GIT
   remote: https://github.com/solrengine/transactions.git
-  revision: 57d43622db0480c41ccbe774dd8542b7cddbc341
+  revision: 7e52bf6052ed6687401026ff2d4aaad0b7c7c11b
   branch: main
   specs:
     solrengine-transactions (0.1.0)

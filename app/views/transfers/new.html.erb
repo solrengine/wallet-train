@@ -1,4 +1,4 @@
-<%= turbo_stream_from "wallet_#{@wallet_address}" %>
+<%= turbo_stream_from "user_transfers_#{current_user.id}" %>
 
 <div class="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950">
   <%# Navigation %>
@@ -23,7 +23,9 @@
          data-transfer-dashboard-url-value="<%= dashboard_path %>"
          data-transfer-wallet-value="<%= @wallet_address %>"
          data-transfer-balance-value="<%= @balance || 0 %>"
-         data-transfer-rpc-url-value="<%= Solrengine::Rpc.configuration.rpc_url %>">
+         data-transfer-rpc-url-value="<%= Solrengine::Rpc.configuration.rpc_url %>"
+         data-transfer-chain-value="solana:<%= Solrengine::Rpc.configuration.network %>"
+         data-transfer-transfers-path-value="<%= transfers_path %>">
 
       <%# Status messages %>
       <div data-transfer-target="status" class="hidden mb-4 p-3 rounded-lg text-sm text-center"></div>
