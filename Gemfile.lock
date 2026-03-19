@@ -10,11 +10,11 @@ GIT
 
 GIT
   remote: https://github.com/solrengine/realtime.git
-  revision: 99b64769c6e7a9f6430e005d3578246778e2da12
+  revision: 3ee73f763f0e69918edc789424e5a59e569725ca
   branch: main
   specs:
     solrengine-realtime (0.1.0)
-      rails (>= 7.1)
+      activesupport (>= 7.1)
       solrengine-rpc (~> 0.1)
       websocket-client-simple (~> 0.9)
 
