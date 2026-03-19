@@ -28,7 +28,7 @@ GIT
 
 GIT
   remote: https://github.com/solrengine/tokens.git
-  revision: 690966cd09887b6dc52a76f486308a5c268c8945
+  revision: e919df2c8803f5e80f4ed9700ee947a1b6c76060
   branch: main
   specs:
     solrengine-tokens (0.1.0)

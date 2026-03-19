@@ -9,8 +9,8 @@ class DashboardController < ApplicationController
     # Clear cache if user has a recent transfer (last 2 minutes)
     # to ensure fresh on-chain data after sending
     if current_user.transfers.where("created_at > ?", 2.minutes.ago).exists?
-      Rails.cache.delete("wallet/#{@wallet_address}/tokens")
-      Rails.cache.delete("wallet/#{@wallet_address}/recent_txs")
+      Rails.cache.delete("solrengine_tokens/wallet/#{@wallet_address}/tokens")
+      Rails.cache.delete("solrengine_tokens/wallet/#{@wallet_address}/recent_txs")
     end
 
     portfolio = Solrengine::Tokens::Portfolio.new(@wallet_address)
