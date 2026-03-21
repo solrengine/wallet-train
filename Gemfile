@@ -58,11 +58,7 @@ group :development do
   gem "web-console"
 end
 
-gem "solrengine-auth", github: "solrengine/auth", branch: "main"
-gem "solrengine-rpc", github: "solrengine/rpc", branch: "main"
-gem "solrengine-tokens", github: "solrengine/tokens", branch: "main"
-gem "solrengine-transactions", github: "solrengine/transactions", branch: "main"
-gem "solrengine-realtime", github: "solrengine/realtime", branch: "main"
+gem "solrengine"
 
 gem "hotwire-livereload", "~> 2.1", group: :development
 

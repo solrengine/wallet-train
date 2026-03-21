@@ -7,11 +7,11 @@ Part of the [SolRengine](https://github.com/solrengine) project.
 ## Stack
 
 - Ruby on Rails 8 (Hotwire, Turbo, Stimulus, Solid Queue/Cache/Cable)
-- SQLite
+- [SolRengine](https://github.com/solrengine/solrengine) — Rails framework for Solana dapps
+- SQLite (primary + cache + queue + cable)
 - Tailwind CSS 4 + esbuild
 - [@solana/kit](https://github.com/anza-xyz/kit) for client-side transaction building
 - [Wallet Standard](https://github.com/anza-xyz/wallet-standard) for wallet discovery
-- Ed25519 signature verification in Ruby
 - Jupiter API for token metadata and prices
 
 ## Features
@@ -20,7 +20,7 @@ Part of the [SolRengine](https://github.com/solrengine) project.
 - **Token Portfolio** — SPL token balances with icons, names, and USD values from Jupiter
 - **Real-time Updates** — Turbo Streams + Idiomorph morph for live dashboard updates
 - **Send SOL** — Build transactions with @solana/kit, sign with wallet, track confirmation
-- **Network Switching** — Mainnet, Devnet, Testnet with per-network caching
+- **Multi-network** — Mainnet, Devnet, or Testnet configured at boot via `SOLANA_NETWORK`
 - **Background Jobs** — Solid Queue for transaction confirmation and wallet monitoring
 - **Token Metadata DB** — Persisted token metadata, only fetched once per mint
 
@@ -37,13 +37,13 @@ bin/rails db:prepare
 bin/dev
 ```
 
-Starts 4 processes: web server, JS bundler, CSS compiler, and Solid Queue worker.
+Starts 5 processes: web server, JS bundler, CSS compiler, Solid Queue worker, and Solana WebSocket monitor.
 
 Open `http://localhost:3000` with a Solana wallet extension installed (Phantom, Solflare, or Backpack).
 
 ## Testing on Devnet
 
-1. Switch to Devnet using the network dropdown
+1. Set `SOLANA_NETWORK=devnet` in `.env` and restart
 2. Create a test wallet: `solana-keygen new -o ~/.config/solana/devnet.json`
 3. Airdrop SOL: `solana airdrop 2 -k ~/.config/solana/devnet.json --url devnet`
 4. Use the Send feature to transfer SOL to the test wallet
@@ -52,8 +52,14 @@ Open `http://localhost:3000` with a Solana wallet extension installed (Phantom, 
 
 | Variable | Default | Description |
 |---|---|---|
-| `SOLANA_RPC_URL` | `https://api.mainnet-beta.solana.com` | Solana RPC endpoint |
+| `SOLANA_NETWORK` | `mainnet` | Network to run on (`mainnet`, `devnet`, `testnet`) |
+| `SOLANA_RPC_URL` | — | Mainnet HTTP RPC endpoint |
+| `SOLANA_WS_URL` | — | Mainnet WebSocket RPC endpoint |
+| `SOLANA_RPC_DEVNET_URL` | — | Devnet HTTP RPC endpoint |
+| `SOLANA_WS_DEVNET_URL` | — | Devnet WebSocket RPC endpoint |
 | `APP_DOMAIN` | `localhost` | Domain for SIWS message (production) |
+
+All config flows through `config/solana.yml` via `SolanaConfig`.
 
 ## Architecture
 

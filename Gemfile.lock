@@ -1,49 +1,3 @@
-GIT
-  remote: https://github.com/solrengine/auth.git
-  revision: 8b6511bdb10014cfbc9088225923f233b539949c
-  branch: main
-  specs:
-    solrengine-auth (0.1.0)
-      base58 (~> 0.2)
-      ed25519 (~> 1.4)
-      rails (>= 7.1)
-
-GIT
-  remote: https://github.com/solrengine/realtime.git
-  revision: 3ee73f763f0e69918edc789424e5a59e569725ca
-  branch: main
-  specs:
-    solrengine-realtime (0.1.0)
-      activesupport (>= 7.1)
-      solrengine-rpc (~> 0.1)
-      websocket-client-simple (~> 0.9)
-
-GIT
-  remote: https://github.com/solrengine/rpc.git
-  revision: 3212cfcb3d08864844ead9e52da5989f2c3289ef
-  branch: main
-  specs:
-    solrengine-rpc (0.1.0)
-      rails (>= 7.1)
-
-GIT
-  remote: https://github.com/solrengine/tokens.git
-  revision: 063a42d912435674e121a2ca1db5058516451d2b
-  branch: main
-  specs:
-    solrengine-tokens (0.1.0)
-      rails (>= 7.1)
-      solrengine-rpc (~> 0.1)
-
-GIT
-  remote: https://github.com/solrengine/transactions.git
-  revision: 7e52bf6052ed6687401026ff2d4aaad0b7c7c11b
-  branch: main
-  specs:
-    solrengine-transactions (0.1.0)
-      rails (>= 7.1)
-      solrengine-rpc (~> 0.1)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -131,6 +85,7 @@ GEM
     bindex (0.8.1)
     bootsnap (1.23.0)
       msgpack (~> 1.2)
+    borsh (0.2.0)
     brakeman (8.0.4)
       racc
     builder (3.3.0)
@@ -373,6 +328,35 @@ GEM
       fugit (~> 1.11)
       railties (>= 7.1)
       thor (>= 1.3.1)
+    solrengine (0.1.0)
+      solrengine-auth (~> 0.1)
+      solrengine-programs (~> 0.1)
+      solrengine-realtime (~> 0.1)
+      solrengine-rpc (~> 0.1)
+      solrengine-tokens (~> 0.1)
+      solrengine-transactions (~> 0.1)
+    solrengine-auth (0.1.0)
+      base58 (~> 0.2)
+      ed25519 (~> 1.4)
+      rails (>= 7.1)
+    solrengine-programs (0.1.0)
+      base58 (~> 0.2)
+      borsh (~> 0.2)
+      ed25519 (~> 1.3)
+      rails (>= 7.1)
+      solrengine-rpc (~> 0.1)
+    solrengine-realtime (0.1.0)
+      activesupport (>= 7.1)
+      solrengine-rpc (~> 0.1)
+      websocket-client-simple (~> 0.9)
+    solrengine-rpc (0.1.0)
+      rails (>= 7.1)
+    solrengine-tokens (0.1.0)
+      rails (>= 7.1)
+      solrengine-rpc (~> 0.1)
+    solrengine-transactions (0.1.0)
+      rails (>= 7.1)
+      solrengine-rpc (~> 0.1)
     sqlite3 (2.9.2-aarch64-linux-gnu)
     sqlite3 (2.9.2-aarch64-linux-musl)
     sqlite3 (2.9.2-arm-linux-gnu)
@@ -454,11 +438,7 @@ DEPENDENCIES
   solid_cable
   solid_cache
   solid_queue
-  solrengine-auth!
-  solrengine-realtime!
-  solrengine-rpc!
-  solrengine-tokens!
-  solrengine-transactions!
+  solrengine
   sqlite3 (>= 2.1)
   stimulus-rails
   thruster
