@@ -14,7 +14,7 @@ class SiwsMessageBuilderTest < ActiveSupport::TestCase
     assert_includes message, "Nonce: abc123def456"
     assert_includes message, "URI: http://localhost:3000"
     assert_includes message, "Version: 1"
-    assert_includes message, "Chain ID: mainnet"
+    assert_includes message, "Chain ID: #{Solrengine::Auth.configuration.chain_id}"
     assert_includes message, "Issued At:"
   end
 

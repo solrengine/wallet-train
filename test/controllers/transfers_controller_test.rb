@@ -72,14 +72,16 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
       network: "devnet"
     )
 
+    valid_sig = "523W4PuV9mThYRUX58vPV5KYs9Z6WkHsE4aLx94LxB1H8TigaRs8Lt2sii2hj56jpmX6UkkSxtfns3QfSvZdtS8g"
+
     patch transfer_path(transfer),
-      params: { signature: "fakesig123", status: "submitted" },
+      params: { signature: valid_sig, status: "submitted" },
       headers: { "Accept" => "application/json" },
       as: :json
 
     assert_response :success
     transfer.reload
-    assert_equal "fakesig123", transfer.signature
+    assert_equal valid_sig, transfer.signature
     assert_equal "submitted", transfer.status
   end
 
@@ -90,7 +92,7 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
       amount_sol: 0.2,
       network: "devnet",
       status: "confirmed",
-      signature: "somesig"
+      signature: "4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi6bMEphXnYBGqL3oAjMFEKjMGkmYRiC4sP3mRs6EBvEwUJ"
     )
 
     get status_transfer_path(transfer)
@@ -98,6 +100,6 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
 
     json = JSON.parse(response.body)
     assert_equal "confirmed", json["status"]
-    assert_equal "somesig", json["signature"]
+    assert_equal "4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi6bMEphXnYBGqL3oAjMFEKjMGkmYRiC4sP3mRs6EBvEwUJ", json["signature"]
   end
 end

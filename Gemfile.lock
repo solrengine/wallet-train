@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/solrengine/auth.git
-  revision: 91e2c830b1e5ef8ce524f64587019fc6e97f7070
+  revision: 8b6511bdb10014cfbc9088225923f233b539949c
   branch: main
   specs:
     solrengine-auth (0.1.0)
@@ -28,7 +28,7 @@ GIT
 
 GIT
   remote: https://github.com/solrengine/tokens.git
-  revision: e919df2c8803f5e80f4ed9700ee947a1b6c76060
+  revision: 063a42d912435674e121a2ca1db5058516451d2b
   branch: main
   specs:
     solrengine-tokens (0.1.0)
@@ -239,21 +239,21 @@ GEM
       net-protocol
     net-ssh (7.3.1)
     nio4r (2.7.5)
-    nokogiri (1.19.1-aarch64-linux-gnu)
+    nokogiri (1.19.2-aarch64-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.19.1-aarch64-linux-musl)
+    nokogiri (1.19.2-aarch64-linux-musl)
       racc (~> 1.4)
-    nokogiri (1.19.1-arm-linux-gnu)
+    nokogiri (1.19.2-arm-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.19.1-arm-linux-musl)
+    nokogiri (1.19.2-arm-linux-musl)
       racc (~> 1.4)
-    nokogiri (1.19.1-arm64-darwin)
+    nokogiri (1.19.2-arm64-darwin)
       racc (~> 1.4)
-    nokogiri (1.19.1-x86_64-darwin)
+    nokogiri (1.19.2-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.19.1-x86_64-linux-gnu)
+    nokogiri (1.19.2-x86_64-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.19.1-x86_64-linux-musl)
+    nokogiri (1.19.2-x86_64-linux-musl)
       racc (~> 1.4)
     ostruct (0.6.3)
     parallel (1.27.0)
