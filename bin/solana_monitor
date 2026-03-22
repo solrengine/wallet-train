@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require_relative "../config/environment"
+
+config = Solrengine::Rpc.configuration
+puts "[SolanaMonitor] Starting on #{config.network}"
+puts "[SolanaMonitor] WS: #{config.ws_url.sub(/api-key=.*/, 'api-key=***')}"
+
+Turbo::StreamsChannel.broadcast_replace_to("_ping", target: "_ping", html: "")
+puts "[SolanaMonitor] Solid Cable OK"
+
+monitors = {}
+
+loop do
+  active_wallets = User.where("updated_at > ?", 1.hour.ago).pluck(:wallet_address)
+
+  active_wallets.each do |wallet|
+    next if monitors[wallet]
+
+    puts "[SolanaMonitor] Subscribing to #{wallet}"
+    monitor = Solrengine::Realtime::AccountMonitor.new(wallet)
+    Thread.new { monitor.start }
+    monitors[wallet] = monitor
+  end
+
+  monitors.each do |wallet, monitor|
+    unless active_wallets.include?(wallet)
+      puts "[SolanaMonitor] Unsubscribing from #{wallet}"
+      monitor.stop
+      monitors.delete(wallet)
+    end
+  end
+
+  sleep 30
+rescue => e
+  puts "[SolanaMonitor] Error: #{e.message}"
+  sleep 5
+end

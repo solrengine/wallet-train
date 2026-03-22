@@ -1,0 +1,43 @@
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
+<%= turbo_stream_from "wallet_#{@wallet_address}" %>
+<%= turbo_stream_from "user_transfers_#{current_user.id}" %>
+
+<% network_colors = { "mainnet" => "bg-green-400", "devnet" => "bg-yellow-400", "testnet" => "bg-blue-400" } %>
+
+<div class="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950">
+  <%# Navigation %>
+  <nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-lg font-bold text-white">WalletTrain</h1>
+      <div class="flex items-center gap-3">
+        <%# Network badge %>
+        <span class="flex items-center gap-1.5 text-xs text-gray-400 bg-gray-800 px-2.5 py-1.5 rounded-lg">
+          <span class="w-1.5 h-1.5 <%= network_colors[Solrengine::Rpc.configuration.network] %> rounded-full"></span>
+          <%= Solrengine::Rpc.configuration.network.capitalize %>
+        </span>
+
+        <%# Wallet address (click to copy) %>
+        <button data-controller="clipboard"
+                data-clipboard-text-value="<%= @wallet_address %>"
+                data-action="click->clipboard#copy"
+                class="text-gray-400 text-xs font-mono bg-gray-800 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors flex items-center gap-1.5">
+          <span data-clipboard-target="label"><%= @short_address %></span>
+          <svg data-clipboard-target="icon" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        </button>
+
+        <%# Disconnect %>
+        <%= button_to "Disconnect", logout_path, method: :delete, class: "text-gray-500 hover:text-white text-xs cursor-pointer transition-colors" %>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-2xl mx-auto px-4 py-8 space-y-6" data-controller="auto-refresh" data-auto-refresh-interval-value="60">
+    <%= render "dashboard/portfolio_value", total_usd: @total_usd %>
+    <%= render "dashboard/token_list", tokens: @tokens %>
+    <%= render "dashboard/recent_activity", transactions: @transactions, wallet_address: @wallet_address %>
+  </div>
+</div>
