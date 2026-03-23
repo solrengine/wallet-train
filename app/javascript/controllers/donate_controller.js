@@ -1,18 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
-import { getWallets } from "@wallet-standard/app"
-import { SolanaSignAndSendTransaction } from "@solana/wallet-standard-features"
 import {
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageLifetimeUsingBlockhash,
-  setTransactionMessageFeePayer,
-  appendTransactionMessageInstruction,
-  compileTransaction,
-  getBase64EncodedWireTransaction,
-  createSolanaRpc,
-  address,
-  getBase58Decoder,
-} from "@solana/kit"
+  discoverWallets,
+  connectWallet,
+  buildTransferTransaction,
+  signAndSend,
+  detectChain,
+} from "@solrengine/wallet-utils"
+import { SolanaSignAndSendTransaction } from "@solana/wallet-standard-features"
+import { createSolanaRpc } from "@solana/kit"
 
 // Handles one-click SOL donations from the landing page.
 // Shows a wallet picker if multiple wallets are available.
@@ -26,14 +21,8 @@ export default class extends Controller {
   connect() {
     this.selectedWallet = null
     this.pendingAmount = null
-    this.discoverWallets()
-  }
-
-  discoverWallets() {
-    const { get, on } = getWallets()
-    this.availableWallets = get().filter(w => w.features[SolanaSignAndSendTransaction])
-    on("register", () => {
-      this.availableWallets = get().filter(w => w.features[SolanaSignAndSendTransaction])
+    this.availableWallets = discoverWallets(SolanaSignAndSendTransaction, (newWallets) => {
+      this.availableWallets = [...this.availableWallets, ...newWallets]
     })
   }
 
@@ -45,13 +34,11 @@ export default class extends Controller {
       return this.showStatus("No Solana wallet found. Please install one.", "error")
     }
 
-    // If only one wallet, use it directly
     if (this.availableWallets.length === 1) {
       this.selectedWallet = this.availableWallets[0]
       return this.executeDonation(amount, event.currentTarget)
     }
 
-    // Multiple wallets — show picker
     this.pendingAmount = amount
     this.pendingButton = event.currentTarget
     this.showWalletPicker()
@@ -92,24 +79,25 @@ export default class extends Controller {
     this.setButtonSpinner(button, "Connecting...")
 
     try {
-      const { wallet, account } = await this.connectWallet(this.selectedWallet)
+      const { wallet, account } = await connectWallet(this.selectedWallet)
 
       this.setButtonSpinner(button, "Sign in wallet...")
-      const txBytes = await this.buildTransaction(account.address, amount)
 
-      const chain = this.rpcUrlValue.includes("devnet") ? "solana:devnet"
-        : this.rpcUrlValue.includes("testnet") ? "solana:testnet"
-        : "solana:mainnet"
+      // Get blockhash from RPC
+      const rpc = createSolanaRpc(this.rpcUrlValue)
+      const { value: { blockhash, lastValidBlockHeight } } = await rpc
+        .getLatestBlockhash({ commitment: "finalized" }).send()
 
-      const feature = wallet.features[SolanaSignAndSendTransaction]
-      const [{ signature: sigBytes }] = await feature.signAndSendTransaction({
-        account,
-        transaction: txBytes,
-        chain
+      const txBytes = buildTransferTransaction({
+        sender: account.address,
+        recipient: this.recipientValue,
+        amountSol: amount,
+        blockhash,
+        lastValidBlockHeight
       })
 
-      const decoder = getBase58Decoder()
-      const signature = decoder.decode(sigBytes)
+      const chain = detectChain(this.rpcUrlValue)
+      const signature = await signAndSend({ wallet, account, transaction: txBytes, chain })
 
       // Success state
       button.classList.remove("opacity-70")
@@ -151,52 +139,6 @@ export default class extends Controller {
         <p class="text-gray-400 text-xs">${text}</p>
       </div>
     `
-  }
-
-  async connectWallet(wallet) {
-    const connectFeature = wallet.features["standard:connect"]
-    if (!connectFeature) throw new Error("Wallet does not support connect")
-
-    const { accounts } = await connectFeature.connect()
-    if (!accounts?.length) throw new Error("No accounts found")
-
-    return { wallet, account: accounts[0] }
-  }
-
-  async buildTransaction(senderAddress, amountSol) {
-    const rpc = createSolanaRpc(this.rpcUrlValue)
-    const { value: { blockhash, lastValidBlockHeight } } = await rpc
-      .getLatestBlockhash({ commitment: "finalized" }).send()
-
-    const lamports = BigInt(Math.round(amountSol * 1_000_000_000))
-    const data = new Uint8Array(12)
-    const dv = new DataView(data.buffer)
-    dv.setUint32(0, 2, true)
-    dv.setUint32(4, Number(lamports & 0xFFFFFFFFn), true)
-    dv.setUint32(8, Number(lamports >> 32n), true)
-
-    const instruction = {
-      programAddress: address("11111111111111111111111111111111"),
-      accounts: [
-        { address: address(senderAddress), role: 3 },
-        { address: address(this.recipientValue), role: 1 },
-      ],
-      data
-    }
-
-    const txMessage = pipe(
-      createTransactionMessage({ version: 0 }),
-      tx => setTransactionMessageFeePayer(address(senderAddress), tx),
-      tx => setTransactionMessageLifetimeUsingBlockhash(
-        { blockhash, lastValidBlockHeight: BigInt(lastValidBlockHeight) },
-        tx
-      ),
-      tx => appendTransactionMessageInstruction(instruction, tx),
-    )
-
-    const compiled = compileTransaction(txMessage)
-    const base64 = getBase64EncodedWireTransaction(compiled)
-    return Uint8Array.from(atob(base64), c => c.charCodeAt(0))
   }
 
   showStatus(message, type) {

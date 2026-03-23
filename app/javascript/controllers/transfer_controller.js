@@ -1,20 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
-import { getWallets } from "@wallet-standard/app"
-import { SolanaSignAndSendTransaction } from "@solana/wallet-standard-features"
 import {
-  pipe,
-  createTransactionMessage,
-  setTransactionMessageLifetimeUsingBlockhash,
-  setTransactionMessageFeePayer,
-  appendTransactionMessageInstruction,
-  compileTransaction,
-  getBase64EncodedWireTransaction,
-  address,
-  getBase58Decoder,
-} from "@solana/kit"
+  findWalletByAddress,
+  buildTransferTransaction,
+  signAndSend,
+  detectChain,
+  explorerUrl,
+  getCsrfToken,
+} from "@solrengine/wallet-utils"
 
-// Handles the Send SOL flow using wallet-standard for signing/sending
-// and @solana/kit for transaction construction.
+// Handles the Send SOL flow using @solrengine/wallet-utils
+// for wallet discovery, transaction building, and signing.
 export default class extends Controller {
   static targets = ["recipient", "amount", "sendBtn", "status", "confirming", "confirmingText", "success", "solscanLink", "confirmationBadge"]
   static values = {
@@ -23,76 +18,6 @@ export default class extends Controller {
     wallet: String,
     balance: Number,
     rpcUrl: String
-  }
-
-  connect() {
-    this.walletStandard = null
-    this.walletAccount = null
-    this.discoverWallet()
-  }
-
-  // Find the wallet-standard wallet that matches our connected address
-  discoverWallet() {
-    const { get } = getWallets()
-    const wallets = get()
-
-    for (const wallet of wallets) {
-      if (!wallet.features[SolanaSignAndSendTransaction]) continue
-
-      // Check if any account matches our connected wallet
-      for (const account of wallet.accounts) {
-        if (account.address === this.walletValue) {
-          this.walletStandard = wallet
-          this.walletAccount = account
-          return
-        }
-      }
-    }
-
-    // Wallet might not have accounts exposed yet — try connecting
-    for (const wallet of wallets) {
-      if (wallet.features[SolanaSignAndSendTransaction]) {
-        this.walletStandard = wallet
-        return
-      }
-    }
-  }
-
-  async ensureConnected() {
-    if (this.walletAccount?.address === this.walletValue) return
-
-    // Try all wallet-standard wallets to find the right account
-    const { get } = getWallets()
-    for (const wallet of get()) {
-      if (!wallet.features[SolanaSignAndSendTransaction]) continue
-
-      // Check existing accounts first
-      const match = wallet.accounts.find(a => a.address === this.walletValue)
-      if (match) {
-        this.walletStandard = wallet
-        this.walletAccount = match
-        return
-      }
-
-      // Try connecting to expose accounts
-      const connectFeature = wallet.features["standard:connect"]
-      if (connectFeature) {
-        try {
-          const { accounts } = await connectFeature.connect()
-          const found = accounts?.find(a => a.address === this.walletValue)
-          if (found) {
-            this.walletStandard = wallet
-            this.walletAccount = found
-            return
-          }
-        } catch { /* try next wallet */ }
-      }
-    }
-
-    throw new Error(
-      `Active wallet account doesn't match your login address (${this.walletValue.slice(0, 4)}...${this.walletValue.slice(-4)}). ` +
-      `Please switch to the correct account in your wallet and try again.`
-    )
   }
 
   setMax() {
@@ -118,11 +43,11 @@ export default class extends Controller {
       this.sendBtnTarget.disabled = true
       this.sendBtnTarget.textContent = "Preparing..."
 
-      // Ensure wallet-standard account is available
-      await this.ensureConnected()
+      // Step 1: Find wallet by address
+      const { wallet, account } = await findWalletByAddress(this.walletValue)
 
-      // Step 1: Get transaction params from Rails
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+      // Step 2: Get transaction params from Rails
+      const csrfToken = getCsrfToken()
       const createResponse = await fetch(this.createUrlValue, {
         method: "POST",
         headers: {
@@ -140,26 +65,19 @@ export default class extends Controller {
 
       const txParams = await createResponse.json()
 
-      // Step 2: Build the transaction
+      // Step 3: Build and sign transaction
       this.showConfirming("Sign the transaction in your wallet...")
-      const txBytes = this.buildTransaction(txParams)
 
-      // Step 3: Sign and send via wallet-standard
-      const feature = this.walletStandard.features[SolanaSignAndSendTransaction]
-      const chain = this.rpcUrlValue.includes("devnet") ? "solana:devnet"
-        : this.rpcUrlValue.includes("testnet") ? "solana:testnet"
-        : "solana:mainnet"
-
-      const [{ signature: sigBytes }] = await feature.signAndSendTransaction({
-        account: this.walletAccount,
-        transaction: txBytes,
-        chain: chain,
-        options: { skipPreflight: false }
+      const txBytes = buildTransferTransaction({
+        sender: txParams.sender,
+        recipient: txParams.recipient,
+        amountSol,
+        blockhash: txParams.blockhash,
+        lastValidBlockHeight: txParams.last_valid_block_height
       })
 
-      // Convert signature bytes to base58 string
-      const decoder = getBase58Decoder()
-      const signature = decoder.decode(sigBytes)
+      const chain = detectChain(this.rpcUrlValue)
+      const signature = await signAndSend({ wallet, account, transaction: txBytes, chain })
 
       // Step 4: Report signature to Rails
       this.updateConfirmingText("Confirming transaction...")
@@ -183,41 +101,6 @@ export default class extends Controller {
     }
   }
 
-  buildTransaction(txParams) {
-    // Build SystemProgram.transfer instruction
-    const lamportsBI = BigInt(txParams.amount_lamports)
-    const data = new Uint8Array(12)
-    const dv = new DataView(data.buffer)
-    dv.setUint32(0, 2, true) // SystemProgram.transfer = index 2
-    dv.setUint32(4, Number(lamportsBI & 0xFFFFFFFFn), true)
-    dv.setUint32(8, Number(lamportsBI >> 32n), true)
-
-    const instruction = {
-      programAddress: address("11111111111111111111111111111111"),
-      accounts: [
-        { address: address(txParams.sender), role: 3 },    // writable signer
-        { address: address(txParams.recipient), role: 1 },  // writable
-      ],
-      data: data
-    }
-
-    // Build v0 transaction message
-    const txMessage = pipe(
-      createTransactionMessage({ version: 0 }),
-      tx => setTransactionMessageFeePayer(address(txParams.sender), tx),
-      tx => setTransactionMessageLifetimeUsingBlockhash(
-        { blockhash: txParams.blockhash, lastValidBlockHeight: 2n ** 64n - 1n },
-        tx
-      ),
-      tx => appendTransactionMessageInstruction(instruction, tx),
-    )
-
-    // Compile and serialize to wire format bytes
-    const compiled = compileTransaction(txMessage)
-    const base64 = getBase64EncodedWireTransaction(compiled)
-    return Uint8Array.from(atob(base64), c => c.charCodeAt(0))
-  }
-
   showConfirming(text) {
     this.sendBtnTarget.classList.add("hidden")
     this.confirmingTarget.classList.remove("hidden")
@@ -232,15 +115,8 @@ export default class extends Controller {
     this.confirmingTarget.classList.add("hidden")
     this.successTarget.classList.remove("hidden")
 
-    const isDevnet = this.rpcUrlValue.includes("devnet")
-    const isTestnet = this.rpcUrlValue.includes("testnet")
-
-    // Use Solana Explorer for devnet/testnet (more reliable), Solscan for mainnet
-    const txUrl = (isDevnet || isTestnet)
-      ? `https://explorer.solana.com/tx/${signature}?cluster=${isDevnet ? "devnet" : "testnet"}`
-      : `https://solscan.io/tx/${signature}`
-
-    this.solscanLinkTarget.href = txUrl
+    const chain = detectChain(this.rpcUrlValue)
+    this.solscanLinkTarget.href = explorerUrl(signature, chain)
     this.solscanLinkTarget.textContent = signature.slice(0, 8) + "..." + signature.slice(-4)
 
     this.confirmationBadgeTarget.textContent = "Submitted"
@@ -258,11 +134,7 @@ export default class extends Controller {
         if (data.status === "finalized" || data.status === "confirmed") {
           this.confirmationBadgeTarget.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1)
           this.confirmationBadgeTarget.className = "inline-block px-2 py-1 rounded-full text-xs bg-green-900/30 text-green-400"
-
-          // Redirect to dashboard after confirmation
-          setTimeout(() => {
-            window.location.href = this.dashboardUrlValue
-          }, 1500)
+          setTimeout(() => { window.location.href = this.dashboardUrlValue }, 1500)
           return
         }
         if (data.status === "failed") {
