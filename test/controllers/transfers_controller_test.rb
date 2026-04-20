@@ -9,30 +9,30 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
     @user = User.create!(wallet_address: @wallet_address)
 
     # Log in
-    get auth_nonce_path, params: { wallet_address: @wallet_address },
+    get solrengine_auth.nonce_path, params: { wallet_address: @wallet_address },
       headers: { "Accept" => "application/json" }
     message = JSON.parse(response.body)["message"]
     signature = @signing_key.sign(message)
 
-    post auth_verify_path,
+    post solrengine_auth.verify_path,
       params: { wallet_address: @wallet_address, message: message, signature: signature.bytes.join(",") },
       headers: { "Accept" => "application/json" },
       as: :json
   end
 
   test "GET /transfers/new requires authentication" do
-    delete logout_path
-    get new_transfer_path
-    assert_redirected_to login_path
+    delete solrengine_auth.logout_path
+    get "/transfers/new"
+    assert_redirected_to solrengine_auth.login_path
   end
 
   test "GET /transfers/new renders send form when logged in" do
-    get new_transfer_path
+    get "/transfers/new"
     assert_response :success
   end
 
   test "POST /transfers rejects invalid recipient" do
-    post transfers_path,
+    post "/transfers",
       params: { recipient: "invalid!", amount_sol: 0.1 },
       headers: { "Accept" => "application/json" },
       as: :json
@@ -43,7 +43,7 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "POST /transfers rejects sending to self" do
-    post transfers_path,
+    post "/transfers",
       params: { recipient: @wallet_address, amount_sol: 0.1 },
       headers: { "Accept" => "application/json" },
       as: :json
@@ -54,7 +54,7 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "POST /transfers rejects zero amount" do
-    post transfers_path,
+    post "/transfers",
       params: { recipient: "Hij97xr2CFGPphT8ebsDT1ASwvejqvLchKDZEvqo6cXM", amount_sol: 0 },
       headers: { "Accept" => "application/json" },
       as: :json
@@ -74,7 +74,7 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
 
     valid_sig = "523W4PuV9mThYRUX58vPV5KYs9Z6WkHsE4aLx94LxB1H8TigaRs8Lt2sii2hj56jpmX6UkkSxtfns3QfSvZdtS8g"
 
-    patch transfer_path(transfer),
+    patch "/transfers/#{transfer.id}",
       params: { signature: valid_sig, status: "submitted" },
       headers: { "Accept" => "application/json" },
       as: :json
@@ -95,7 +95,7 @@ class TransfersControllerTest < ActionDispatch::IntegrationTest
       signature: "4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi6bMEphXnYBGqL3oAjMFEKjMGkmYRiC4sP3mRs6EBvEwUJ"
     )
 
-    get status_transfer_path(transfer)
+    get "/transfers/#{transfer.id}/status"
     assert_response :success
 
     json = JSON.parse(response.body)
