@@ -59,6 +59,9 @@ group :development do
 end
 
 gem "solrengine"
+# TEMP (feat/nfts): path pin until solrengine-tokens 0.2.0 is on RubyGems —
+# then delete this line and run: bundle update solrengine-tokens
+gem "solrengine-tokens", path: "../solrengine-tokens"
 
 gem "hotwire-livereload", "~> 2.1", group: :development
 

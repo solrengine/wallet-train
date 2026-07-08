@@ -17,5 +17,15 @@ class DashboardController < ApplicationController
     @tokens = portfolio.tokens
     @total_usd = portfolio.total_usd_value
     @transactions = portfolio.recent_transactions
+    @nfts = fetch_nfts(portfolio)
+  end
+
+  private
+
+  def fetch_nfts(portfolio)
+    portfolio.nfts
+  rescue => e
+    Rails.logger.error("NFT fetch failed: #{e.class}: #{e.message}")
+    []
   end
 end

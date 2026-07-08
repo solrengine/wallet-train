@@ -1,3 +1,10 @@
+PATH
+  remote: ../solrengine-tokens
+  specs:
+    solrengine-tokens (0.2.0)
+      rails (>= 7.1)
+      solrengine-rpc (~> 0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -351,9 +358,6 @@ GEM
       websocket-client-simple (~> 0.9)
     solrengine-rpc (0.1.0)
       rails (>= 7.1)
-    solrengine-tokens (0.1.0)
-      rails (>= 7.1)
-      solrengine-rpc (~> 0.1)
     solrengine-transactions (0.1.0)
       rails (>= 7.1)
       solrengine-rpc (~> 0.1)
@@ -439,6 +443,7 @@ DEPENDENCIES
   solid_cache
   solid_queue
   solrengine
+  solrengine-tokens!
   sqlite3 (>= 2.1)
   stimulus-rails
   thruster

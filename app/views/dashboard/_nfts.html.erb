@@ -1,0 +1,39 @@
+<div id="nft_list" class="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-2xl overflow-hidden">
+  <div class="px-5 py-3 border-b border-gray-700">
+    <h3 class="text-sm font-semibold text-white">NFTs <span class="text-gray-500">(<%= nfts.size %>)</span></h3>
+  </div>
+
+  <% if nfts.any? %>
+    <div class="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <% nfts.each do |nft| %>
+        <div class="rounded-xl overflow-hidden border border-gray-700 bg-gray-800">
+          <div class="relative aspect-square bg-gray-700">
+            <div class="w-full h-full flex items-center justify-center text-gray-500 text-2xl">🖼</div>
+            <% if nft[:image] %>
+              <img src="<%= nft[:image] %>"
+                   alt="<%= nft[:name] %>"
+                   class="w-full h-full object-cover absolute inset-0"
+                   loading="lazy"
+                   onerror="this.remove()" />
+            <% end %>
+          </div>
+          <div class="px-3 py-2">
+            <p class="text-white text-sm font-medium truncate" title="<%= nft[:name] %>"><%= nft[:name] %></p>
+            <div class="flex items-center gap-1.5">
+              <% if nft[:collection] %>
+                <p class="text-gray-500 text-xs truncate"><%= nft[:collection] %></p>
+              <% end %>
+              <% if nft[:compressed] %>
+                <span class="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-300 shrink-0">cNFT</span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="px-5 py-8 text-center text-gray-500 text-sm">
+      No NFTs found
+    </div>
+  <% end %>
+</div>
